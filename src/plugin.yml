@@ -1,0 +1,10 @@
+name: BukkitUpdater
+main: zauberstuhl.BukkitUpdater.BukkitUpdater
+version: 0.1.3
+author: zauberstuhl
+description: none
+commands:
+  u2d:
+    description: display new updates and more
+    aliases:
+    usage: /<command> [update|help] <PluginName>

@@ -164,10 +164,10 @@ public class BukkitUpdater extends JavaPlugin {
 			allVersions += name+"::"+version+",";
 			buffer = sendData(buffer);
 			
-			if(!buffer.equals("false")) {
-				supported += buffer;
-			} else {
+			if (buffer.equals("unsupported")) {
 				unsupported += name+";";
+			} else if(!buffer.equals("false")) {
+				supported += buffer;				
 			}
 		}
 		

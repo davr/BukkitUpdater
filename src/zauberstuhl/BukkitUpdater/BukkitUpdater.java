@@ -28,12 +28,31 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
-* BukkitUpdater for Bukkit
+* BukkitUpdater 0.2.x
+* Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Permissions Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Permissions Public License for more details.
+* 
+* You should have received a copy of the GNU Permissions Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+* This plugin was written for Craftbukkit
 * @author zauberstuhl
 */
 
 public class BukkitUpdater extends JavaPlugin {
-	public String zadb = "";
+	public String supportedPlugins;
+	public String unsupportedPlugins;
 	public String cwd = System.getProperty("user.dir");
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	private static ColouredConsoleSender console = new ColouredConsoleSender((CraftServer) Bukkit.getServer());
@@ -61,15 +80,18 @@ public class BukkitUpdater extends JavaPlugin {
 			player = (Player)sender;
 		}
 		
-		if ((commandName.equalsIgnoreCase("u2d")) && (perm(player))) {
-			checkOverview(player);
-			
+		if ((commandName.equalsIgnoreCase("u2d")) && (perm(player))) {			
 			if (args.length == 0) {
-				String[] plugins = zadb.split(";");
+				//auto reload
+				checkOverview(player);
+				
+				String[] plugins = supportedPlugins.split(";");
+				String[] uPlugins = unsupportedPlugins.split(";");
 				
 				sendTo(player, "WHITE", "");
 				sendTo(player, "WHITE", "BukkitUpdater version "+this.getDescription().getVersion());
 				sendTo(player, "WHITE", "This addon was written by zauberstuhl y33");
+				
 				if (plugins[0].equalsIgnoreCase(""))
 					sendTo(player, "GREEN", "Currently there are no new updates available.");
 				else
@@ -79,8 +101,11 @@ public class BukkitUpdater extends JavaPlugin {
 					if (plugins[i].matches(".*\\s\\(L\\)")) {
 						sendTo(player, "GREEN", plugins[i]);
 					} else
-						sendTo(player, "RED", plugins[i]);
+						sendTo(player, "GREEN", plugins[i]);
 				}
+				
+				if (!uPlugins[0].equalsIgnoreCase(""))
+					sendTo(player, "RED", "There is/are "+uPlugins.length+" unspported plugin(s). For more info: /u2d unsupported");
 				return true;
 			} else {
 				if ((args[0].equalsIgnoreCase("update")) && (!args[1].isEmpty())) {
@@ -103,6 +128,17 @@ public class BukkitUpdater extends JavaPlugin {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+				} else if (args[0].equalsIgnoreCase("unsupported")){
+					String[] uPlugins = unsupportedPlugins.split(";");
+					
+					sendTo(player, "WHITE", "");
+					if (!uPlugins[0].equalsIgnoreCase("")){
+						sendTo(player, "WHITE", "Following plugins are not supported by BukkitUpdater:");
+						for(int i = 0; uPlugins.length > i; i++)
+							sendTo(player, "RED", uPlugins[i]);
+					}else
+						sendTo(player, "GREEN", "All your plugins are supported by BukkitUpdater :)");
+					return true;
 				} else {
 					helper(player);
 					return true;
@@ -113,41 +149,46 @@ public class BukkitUpdater extends JavaPlugin {
 	}
 
 	public void checkOverview(Player player){
-		boolean upd = false;
 		String allVersions = "";
-		String received = "";
+		String supported = "";
+		String unsupported = "";
 		String buffer;
+		
 		Plugin[] plugins = this.getServer().getPluginManager().getPlugins();
+		
 		for(int i = 0; i < plugins.length; i++){
 			String version = plugins[i].getDescription().getVersion();
 			version = version.replaceAll( "[^0-9]", "");
-			allVersions += plugins[i].getDescription().getName()+"::"+version+",";
-			if(allVersions.length() > 400){
-				buffer = sendData(allVersions);
-				if(!buffer.equals("false")) {
-					received += buffer;
-					upd = true;
-				}
+			String name = plugins[i].getDescription().getName();
+			buffer = name+"::"+version;
+			allVersions += name+"::"+version+",";
+			buffer = sendData(buffer);
+			
+			if(!buffer.equals("false")) {
+				supported += buffer;
+			} else {
+				unsupported += name+";";
 			}
 		}
+		
 		buffer = sendData(allVersions);
 		if(!buffer.equals("false")) {
-			received += buffer;
-			upd = true;
-		}
-		if(upd) {
 			sendTo(player, "RED", "New Updates available!! /u2d for details");
-		}		
-		zadb = received;
+		}
+		
+		supportedPlugins = supported;
+		unsupportedPlugins = unsupported;
 	}
 	
 	public String sendData(String send){
 		String token = "";
 		String received = null;
 		File txt = new File(cwd+"/plugins/BukkitUpdater/token.txt");
+		
 		if (txt.exists()) {
 			token = readFile(txt);
 		}
+		
 		try {
 			URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/index.pl?s="+send+"&t="+token );
 			InputStream in = adress.openStream();
@@ -187,6 +228,8 @@ public class BukkitUpdater extends JavaPlugin {
 			sendTo(player, "WHITE", "Shows outdated plugin(s)");
 			sendTo(player, "GOLD", "/u2d update <PluginName>");
 			sendTo(player, "WHITE", "Update the plugin if there is following tag behind the name \"(L)\"");
+			sendTo(player, "GOLD", "/u2d unsupported");
+			sendTo(player, "WHITE", "Shows unsupported plugins");
 			sendTo(player, "GOLD", "/u2d help");
 			sendTo(player, "WHITE", "Display this help-text");
 	}

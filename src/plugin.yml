@@ -8,3 +8,4 @@ commands:
     description: display new updates and more
     aliases:
     usage: /<command> [update|unsupported|help] <PluginName>
+    permission: BukkitUpdater.usage    

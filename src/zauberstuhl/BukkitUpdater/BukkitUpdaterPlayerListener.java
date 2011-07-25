@@ -35,7 +35,7 @@ public class BukkitUpdaterPlayerListener extends PlayerListener {
 	
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		if (player.isOp())
+		if (plugin.perm(player))
 			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin,
 					new AsyncOverview(player,
 							plugin.getServer().getPluginManager().getPlugins(),

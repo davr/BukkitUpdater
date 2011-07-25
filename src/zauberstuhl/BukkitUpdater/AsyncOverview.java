@@ -60,7 +60,7 @@ public class AsyncOverview extends Thread{
 			} else
 				th.sendTo(player, "GREEN", "All your plugins are supported by BukkitUpdater :)");
 		} else {
-			if (u2d(player)) {
+			if (u2d) {
 				supported = supportedPlugins.split(";");
 				th.sendTo(player, "GOLD", "New Updates are available for:");
 				for(int i = 0; supported.length > i; i++)
@@ -88,10 +88,10 @@ public class AsyncOverview extends Thread{
 			allVersions += name+"::"+version+",";
 			buffer = th.sendData(plugin.cwd, buffer);
 			
-			if(!buffer.equals("false") && !buffer.equals("unsupported"))
-				supported += buffer;
-			else if (buffer.equals("unsupported"))
-				unsupported += name+";";
+			if(!buffer.equals("false") && !buffer.equals("unsupported")) {
+				supported += plugins[i]+";";
+			} else if (buffer.equals("unsupported"))
+				unsupported += plugins[i]+";";
 		}
 		supportedPlugins = supported;
 		unsupportedPlugins = unsupported;

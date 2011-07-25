@@ -9,8 +9,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
 
 /**
 * BukkitUpdater 0.2.x
@@ -40,6 +44,7 @@ public class BukkitUpdater extends JavaPlugin {
 	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	
+	public PermissionHandler permissionHandler;
 	public String cwd = System.getProperty("user.dir");
 	
 	@Override
@@ -51,7 +56,7 @@ public class BukkitUpdater extends JavaPlugin {
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
-		setup();
+		setupBukkitUpdater();
 		th.console.sendMessage(ChatColor.GREEN+"[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
 	}
 		
@@ -94,14 +99,23 @@ public class BukkitUpdater extends JavaPlugin {
 		return false;
 	}
 	
-	public void setup(){
+	public void setupBukkitUpdater(){
 		String uuid = UUID.randomUUID().toString();
 		File txt = new File(cwd+"/plugins/BukkitUpdater/token.txt");
 		File folder = new File(cwd +"/plugins/BukkitUpdater/");
 		File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
-		folder.mkdirs();
-		backupFolder.mkdirs();
-
+		
+		if (!folder.exists())
+			if (!folder.mkdir()) {
+				th.console.sendMessage("[BukkitUpdater] Creating main directory failed!");
+				onDisable();
+			}
+		if (!backupFolder.exists())
+			if (!backupFolder.mkdir()) {
+				th.console.sendMessage("[BukkitUpdater] Creating backup directory failed!");
+				onDisable();
+			}
+						
 		if (!txt.exists()) {
 			th.writeToFile(txt, uuid);
 			th.console.sendMessage("[BukkitUpdater] Created token:");
@@ -112,12 +126,31 @@ public class BukkitUpdater extends JavaPlugin {
 			} else
 				th.console.sendMessage("[BukkitUpdater] Ups! Send token failed");
 		}
+		
+		//setting up permissions
+		if (permissionHandler != null)
+			return;
+		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+	    if (permissionsPlugin == null) {
+	        th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to OP");
+	        return;
+	    }
+	    permissionHandler = ((Permissions) permissionsPlugin).getHandler();
+	    th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsPlugin).getDescription().getFullName());
 	}
 	
-	public static boolean perm(Player player){
+	public boolean perm(Player player){
 		if (player == null)
 			return true;
-		else
-			return player.isOp();
+		
+		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+	    if (permissionsPlugin == null)
+	    	return player.isOp();
+	    else {
+	    	if (this.permissionHandler.has(player, "BukkitUpdater.usage"))
+	    		return true;
+	    	else
+	    		return false;
+	    }
 	}
 }

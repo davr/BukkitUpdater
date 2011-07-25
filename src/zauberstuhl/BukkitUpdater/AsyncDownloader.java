@@ -2,7 +2,6 @@ package zauberstuhl.BukkitUpdater;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,20 +11,23 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 
+import org.bukkit.entity.Player;
+
 /**
 * BukkitUpdater 0.2.x
 * Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
-* 
+* and many thanks to V10lator for your support.
+*
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU Permissions Public License as published by
 * the Free Software Foundation, either version 2 of the License, or
 * (at your option) any later version.
-* 
+*
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 * GNU Permissions Public License for more details.
-* 
+*
 * You should have received a copy of the GNU Permissions Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -35,16 +37,41 @@ import java.net.URL;
 * @author zauberstuhl
 */
 
-public class BukkitUpdaterDownloader {
-	private final BukkitUpdater plugin;
-	public BukkitUpdaterDownloader(BukkitUpdater instance) {
-		plugin = instance;
+public class AsyncDownloader extends Thread{
+	private final BukkitUpdater plugin = new BukkitUpdater();
+	private final ThreadHelper th = new ThreadHelper();
+	private Player player;
+	private String pluginName;
+	
+	public AsyncDownloader(Player player, String pluginName) {
+		this.pluginName = pluginName;
+		this.player = player;
+	}
+	
+	public void run() {
+		try {
+			if (update(pluginName)) {
+				th.sendTo(player, "GREEN", "The plugin "+pluginName+" was successfully updated :)");
+				th.sendTo(player, "GREEN", "Please reload the server now via /reload");
+			} else {
+				th.sendTo(player, "RED", "The plugin "+pluginName+" update failed!");
+				th.sendTo(player, "RED", "You can update only plugins with the (L) behind the name.");
+			}
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public boolean update(String pluginName) throws IllegalStateException, MalformedURLException, ProtocolException, IOException {
 		OutputStream os;
 		String dtFile = plugin.cwd+"/plugins/"+pluginName+".jar";
-		String url = plugin.sendData(pluginName+"::url");
+		String url = th.sendData(plugin.cwd, pluginName+"::url");
 		
 		if (url.equalsIgnoreCase("false")) {
 			return false;
@@ -77,22 +104,16 @@ public class BukkitUpdaterDownloader {
         }
 	}
 	
-	public static void backup(String srFile, String dtFile){
+	public static void backup(String srFile, String dtFile) throws IOException{
 		InputStream in;
-		try {
-			in = new FileInputStream(new File(srFile));
-			OutputStream out = new FileOutputStream(new File(dtFile));
-			byte[] buf = new byte[1024];
-			int len;
-			while ((len = in.read(buf)) > 0){
-				out.write(buf, 0, len);
-			}
-			in.close();
-			out.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		in = new FileInputStream(new File(srFile));
+		OutputStream out = new FileOutputStream(new File(dtFile));
+		byte[] buf = new byte[1024];
+		int len;
+		while ((len = in.read(buf)) > 0){
+			out.write(buf, 0, len);
 		}
+		in.close();
+		out.close();
 	}
 }

@@ -1,6 +1,6 @@
 name: BukkitUpdater
 main: zauberstuhl.BukkitUpdater.BukkitUpdater
-version: 0.2.4
+version: 0.2.5
 author: zauberstuhl
 description: none
 commands:

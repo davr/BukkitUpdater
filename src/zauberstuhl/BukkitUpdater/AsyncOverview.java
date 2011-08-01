@@ -82,7 +82,7 @@ public class AsyncOverview extends Thread{
 		
 		for(int i = 0; i < plugins.length; i++){
 			String version = plugins[i].getDescription().getVersion();
-			version = version.replaceAll( "[^0-9]", "");
+			//version = version.replaceAll( "[^0-9]", "");
 			String name = plugins[i].getDescription().getName();
 			buffer = name+"::"+version;
 			allVersions += name+"::"+version+",";

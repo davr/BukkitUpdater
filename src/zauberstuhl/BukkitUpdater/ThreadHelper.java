@@ -56,7 +56,7 @@ public class ThreadHelper {
 		}
 		
 		try {
-			URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/index.pl?s="+send+"&t="+token );
+			URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
 			InputStream in = adress.openStream();
 			received = new Scanner( in ).useDelimiter( "\\Z" ).next();
 		} catch (MalformedURLException e) {

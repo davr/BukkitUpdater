@@ -1,7 +1,10 @@
-package zauberstuhl.BukkitUpdater;
+package zauberstuhl.BukkitUpdater.Async;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+
+import zauberstuhl.BukkitUpdater.BukkitUpdater;
+import zauberstuhl.BukkitUpdater.ThreadHelper;
 
 /**
 * BukkitUpdater 0.2.x
@@ -27,7 +30,7 @@ import org.bukkit.plugin.Plugin;
 * @author zauberstuhl
 */
 
-public class AsyncOverview extends Thread{
+public class Overview extends Thread{
 	private final BukkitUpdater plugin = new BukkitUpdater();
 	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
@@ -37,7 +40,7 @@ public class AsyncOverview extends Thread{
 	public String supportedPlugins = "";
 	public String unsupportedPlugins = "";
 		
-	public AsyncOverview(Player player, Plugin[] plugins, String action) {
+	public Overview(Player player, Plugin[] plugins, String action) {
 		this.player = player;
 		this.plugins = plugins;
 		this.action = action;
@@ -90,7 +93,7 @@ public class AsyncOverview extends Thread{
 			if(!buffer.equals("false") && !buffer.equals("unsupported")) {
 				supported += buffer+";";
 			} else if (buffer.equals("unsupported"))
-				unsupported += buffer+";";
+				unsupported += plugins[i]+";";
 		}
 		supportedPlugins = supported;
 		unsupportedPlugins = unsupported;

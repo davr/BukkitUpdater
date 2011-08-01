@@ -1,4 +1,4 @@
-package zauberstuhl.BukkitUpdater;
+package zauberstuhl.BukkitUpdater.Async;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +12,9 @@ import java.net.ProtocolException;
 import java.net.URL;
 
 import org.bukkit.entity.Player;
+
+import zauberstuhl.BukkitUpdater.BukkitUpdater;
+import zauberstuhl.BukkitUpdater.ThreadHelper;
 
 /**
 * BukkitUpdater 0.2.x
@@ -37,13 +40,13 @@ import org.bukkit.entity.Player;
 * @author zauberstuhl
 */
 
-public class AsyncDownloader extends Thread{
+public class Downloader extends Thread{
 	private final BukkitUpdater plugin = new BukkitUpdater();
 	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
 	private String pluginName;
 	
-	public AsyncDownloader(Player player, String pluginName) {
+	public Downloader(Player player, String pluginName) {
 		this.pluginName = pluginName;
 		this.player = player;
 	}

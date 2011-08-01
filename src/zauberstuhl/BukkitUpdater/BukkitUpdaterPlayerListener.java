@@ -3,6 +3,8 @@ package zauberstuhl.BukkitUpdater;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
 
+import zauberstuhl.BukkitUpdater.Async.Overview;
+
 /**
 * BukkitUpdater 0.2.x
 * Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
@@ -35,9 +37,9 @@ public class BukkitUpdaterPlayerListener extends PlayerListener {
 	
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		if (plugin.perm(player))
+		if (plugin.perm(player, "usage", false))
 			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin,
-					new AsyncOverview(player,
+					new Overview(player,
 							plugin.getServer().getPluginManager().getPlugins(),
 							"info"));
 	}

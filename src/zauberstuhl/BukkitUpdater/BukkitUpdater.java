@@ -13,6 +13,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import zauberstuhl.BukkitUpdater.Async.Downloader;
+import zauberstuhl.BukkitUpdater.Async.Overview;
+import zauberstuhl.BukkitUpdater.Async.Reloader;
+
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
@@ -69,29 +73,51 @@ public class BukkitUpdater extends JavaPlugin {
 			player = (Player)sender;
 		}
 		
-		if ((commandName.equalsIgnoreCase("u2d")) && (perm(player))) {			
+		if (commandName.equalsIgnoreCase("u2d")) {			
 			if (args.length == 0) {
+				if (!perm(player, "usage", true))
+					return false;
 				th.sendTo(player, "WHITE", "");
 				th.sendTo(player, "WHITE", "BukkitUpdater version "+this.getDescription().getVersion());
 				th.sendTo(player, "RED", "Fetching information...");
 				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-						new AsyncOverview(player,
+						new Overview(player,
 								this.getServer().getPluginManager().getPlugins(),
 								"u2d"));
 				return true;
 			} else {
-				if ((args[0].equalsIgnoreCase("update")) && (!args[1].isEmpty())) {
+				if ((args[0].equalsIgnoreCase("update")) && args.length > 1) {
+					if (!perm(player, "update", true))
+						return false;
 					th.sendTo(player, "RED", "Updating plugin...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new AsyncDownloader(player, args[1]));
+							new Downloader(player, args[1]));
 					return true;
-				} else if (args[0].equalsIgnoreCase("unsupported")){
+				}
+				if (args[0].equalsIgnoreCase("unsupported")) {
+					if (!perm(player, "usage", true))
+						return false;
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new AsyncOverview(player,
+							new Overview(player,
 									this.getServer().getPluginManager().getPlugins(),
 									"unsupported"));
 					return true;
-				} else {
+				}
+				if (args[0].equalsIgnoreCase("reload") && args.length > 1) {
+					if (!perm(player, "reload", true))
+						return false;
+					PluginManager pm = this.getServer().getPluginManager();
+					Plugin reloadPlugin = pm.getPlugin(args[1]);
+					
+					if (reloadPlugin != null) {
+						this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+								new Reloader(player, pm, reloadPlugin));
+						return true;
+					}
+				}
+				if (args[0].equalsIgnoreCase("help")) {
+					if (!perm(player, "help", true))
+						return false;
 					th.helper(player);
 					return true;
 				}
@@ -140,7 +166,7 @@ public class BukkitUpdater extends JavaPlugin {
 	    th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsPlugin).getDescription().getFullName());
 	}
 	
-	public boolean perm(Player player){
+	public boolean perm(Player player, String perm, Boolean notify){
 		if (player == null)
 			return true;
 		
@@ -148,10 +174,13 @@ public class BukkitUpdater extends JavaPlugin {
 	    if (permissionsPlugin == null)
 	    	return player.isOp();
 	    else {
-	    	if (this.permissionHandler.has(player, "BukkitUpdater.usage"))
+	    	if (this.permissionHandler.has(player, "BukkitUpdater."+perm))
 	    		return true;
-	    	else
+	    	else {
+	    		if (notify)
+	    			th.sendTo(player, "GRAY", "(You have not enough permissions)");
 	    		return false;
+	    	}
 	    }
 	}
 }

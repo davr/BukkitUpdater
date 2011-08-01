@@ -73,7 +73,7 @@ public class BukkitUpdater extends JavaPlugin {
 			if (args.length == 0) {
 				th.sendTo(player, "WHITE", "");
 				th.sendTo(player, "WHITE", "BukkitUpdater version "+this.getDescription().getVersion());
-				th.sendTo(player, "WHITE", "This addon was written by zauberstuhl y33");
+				th.sendTo(player, "RED", "Fetching information...");
 				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
 						new AsyncOverview(player,
 								this.getServer().getPluginManager().getPlugins(),
@@ -81,6 +81,7 @@ public class BukkitUpdater extends JavaPlugin {
 				return true;
 			} else {
 				if ((args[0].equalsIgnoreCase("update")) && (!args[1].isEmpty())) {
+					th.sendTo(player, "RED", "Updating plugin...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
 							new AsyncDownloader(player, args[1]));
 					return true;

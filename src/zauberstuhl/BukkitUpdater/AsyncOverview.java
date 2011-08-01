@@ -82,16 +82,15 @@ public class AsyncOverview extends Thread{
 		
 		for(int i = 0; i < plugins.length; i++){
 			String version = plugins[i].getDescription().getVersion();
-			//version = version.replaceAll( "[^0-9]", "");
 			String name = plugins[i].getDescription().getName();
 			buffer = name+"::"+version;
 			allVersions += name+"::"+version+",";
 			buffer = th.sendData(plugin.cwd, buffer);
 			
 			if(!buffer.equals("false") && !buffer.equals("unsupported")) {
-				supported += plugins[i]+";";
+				supported += buffer+";";
 			} else if (buffer.equals("unsupported"))
-				unsupported += plugins[i]+";";
+				unsupported += buffer+";";
 		}
 		supportedPlugins = supported;
 		unsupportedPlugins = unsupported;

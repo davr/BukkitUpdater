@@ -95,6 +95,7 @@ public class BukkitUpdater extends JavaPlugin {
 					return true;
 				}
 				if (args[0].equalsIgnoreCase("unsupported")) {
+					th.sendTo(player, "RED", "Searching unsupported plugins...");
 					if (!perm(player, "usage", true))
 						return false;
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,

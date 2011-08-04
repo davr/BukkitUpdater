@@ -3,12 +3,10 @@ package zauberstuhl.BukkitUpdater;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -46,25 +44,25 @@ public class ThreadHelper {
 	public ColouredConsoleSender console = new ColouredConsoleSender(
 			(CraftServer) Bukkit.getServer());
 	
-	public String sendData(String cwd, String send){
+	public String cwd = System.getProperty("user.dir");
+	
+	public File token = new File(cwd+"/plugins/BukkitUpdater/token.txt");
+	
+	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.txt");
+	
+	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
+	
+	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
+	
+	public String sendData(String send) throws IOException{
 		String token = "";
-		String received = null;
-		File txt = new File(cwd+"/plugins/BukkitUpdater/token.txt");
 		
-		if (txt.exists()) {
-			token = readFile(txt);
+		if (this.token.exists()) {
+			token = readFile(this.token);
 		}
-		
-		try {
-			URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
-			InputStream in = adress.openStream();
-			received = new Scanner( in ).useDelimiter( "\\Z" ).next();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return received;
+		URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
+		InputStream in = adress.openStream();
+		return new Scanner( in ).useDelimiter( "\\Z" ).next();
 	}
 	
 	public void helper(Player player) {
@@ -82,32 +80,15 @@ public class ThreadHelper {
 		sendTo(player, "WHITE", "Display this help-text");
 	}
 
-	public String readFile(File file) {
-		String s;
-		BufferedReader br;
-		try {
-			br = new BufferedReader(new FileReader(file));
-			try {
-				s = br.readLine();
-				return s;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		return "";
+	public String readFile(File file) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		return br.readLine();
 	}
 
-	public void writeToFile(File file, String input) {
-		try {
-			FileWriter fstream = new FileWriter(file);
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(input);
-			out.close();
-		} catch (IOException e){
-			e.printStackTrace();
-		}
+	public void writeToFile(File file, String input) throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter(file));
+		out.write(input);
+		out.close();
 	}
 	
 	public void sendTo(Player player, String color, String string) {

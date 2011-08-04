@@ -1,9 +1,10 @@
 package zauberstuhl.BukkitUpdater.Async;
 
+import java.io.IOException;
+
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import zauberstuhl.BukkitUpdater.BukkitUpdater;
 import zauberstuhl.BukkitUpdater.ThreadHelper;
 
 /**
@@ -31,7 +32,6 @@ import zauberstuhl.BukkitUpdater.ThreadHelper;
 */
 
 public class Overview extends Thread{
-	private final BukkitUpdater plugin = new BukkitUpdater();
 	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
 	private Plugin[] plugins;
@@ -49,35 +49,39 @@ public class Overview extends Thread{
 	public void run() {
 		String[] supported;
 		String[] unsupported;
+
 		// start a lookup
-		boolean u2d = u2d(player);
-		
-		if (action.equalsIgnoreCase("info")) {
-			if (u2d) th.sendTo(player, "RED", "New Updates available!! /u2d for details");
-		} else if (action.equalsIgnoreCase("unsupported")) {
-			if (unsupportedPlugins.matches(".*;.*")) {
-				unsupported = unsupportedPlugins.split(";");
-				th.sendTo(player, "WHITE", "Following plugins are not supported by BukkitUpdater:");
-				for(int i = 0; unsupported.length > i; i++)
-					th.sendTo(player, "RED", unsupported[i]);
-			} else
-				th.sendTo(player, "GREEN", "All your plugins are supported by BukkitUpdater :)");
-		} else {
-			if (u2d) {
-				supported = supportedPlugins.split(";");
-				th.sendTo(player, "GOLD", "New Updates are available for:");
-				for(int i = 0; supported.length > i; i++)
-					th.sendTo(player, "GREEN", supported[i]);
-			} else
-				th.sendTo(player, "GREEN", "Currently there are no new updates available.");
-			if (unsupportedPlugins.matches(".*;.*")) {
-				unsupported = unsupportedPlugins.split(";");
-				th.sendTo(player, "RED", "There is/are "+unsupported.length+" unspported plugin(s). For more info: /u2d unsupported");
-			}			
+		try {
+			boolean u2d = u2d(player);
+			if (action.equalsIgnoreCase("info")) {
+				if (u2d) th.sendTo(player, "RED", "New Updates available!! /u2d for details");
+			} else if (action.equalsIgnoreCase("unsupported")) {
+				if (unsupportedPlugins.matches(".*;.*")) {
+					unsupported = unsupportedPlugins.split(";");
+					th.sendTo(player, "WHITE", "Following plugins are not supported by BukkitUpdater:");
+					for(int i = 0; unsupported.length > i; i++)
+						th.sendTo(player, "RED", unsupported[i]);
+				} else
+					th.sendTo(player, "GREEN", "All your plugins are supported by BukkitUpdater :)");
+			} else {
+				if (u2d) {
+					supported = supportedPlugins.split(";");
+					th.sendTo(player, "GOLD", "New Updates are available for:");
+					for(int i = 0; supported.length > i; i++)
+						th.sendTo(player, "GREEN", supported[i]);
+				} else
+					th.sendTo(player, "GREEN", "Currently there are no new updates available.");
+				if (unsupportedPlugins.matches(".*;.*")) {
+					unsupported = unsupportedPlugins.split(";");
+					th.sendTo(player, "RED", "There is/are "+unsupported.length+" unspported plugin(s). For more info: /u2d unsupported");
+				}			
+			}
+		} catch (IOException e) {
+			th.sendTo(player, "GREY", "(Something went wrong)");
 		}
 	}
 	
-	public boolean u2d(Player player){
+	public boolean u2d(Player player) throws IOException{
 		String allVersions = "";
 		String supported = "";
 		String unsupported = "";
@@ -88,9 +92,12 @@ public class Overview extends Thread{
 			String name = plugins[i].getDescription().getName();
 			buffer = name+"::"+version;
 			allVersions += name+"::"+version+",";
-			buffer = th.sendData(plugin.cwd, buffer);
+			buffer = th.sendData(buffer);			
 			
-			if(!buffer.equals("false") && !buffer.equals("unsupported")) {
+			if(!buffer.equals("false") &&
+					!buffer.equals("unsupported") &&
+					blacklist(plugins[i].toString())) {
+				
 				supported += buffer+";";
 			} else if (buffer.equals("unsupported"))
 				unsupported += plugins[i]+";";
@@ -98,9 +105,18 @@ public class Overview extends Thread{
 		supportedPlugins = supported;
 		unsupportedPlugins = unsupported;
 		
-		buffer = th.sendData(plugin.cwd, allVersions);
+		buffer = th.sendData(allVersions);
 		if(!buffer.equals("false"))
 			return true;
 		return false;
+	}
+	
+	public boolean blacklist(String plugin) throws IOException {
+		// read the blacklist and separate
+		String blacklist = th.readFile(th.blacklist).replaceAll(",", "").toString();
+		
+		if (blacklist.matches("*"+plugin+"*"))
+			return false;
+		return true;
 	}
 }

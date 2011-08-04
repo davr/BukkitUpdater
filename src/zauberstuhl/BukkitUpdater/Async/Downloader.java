@@ -13,7 +13,6 @@ import java.net.URL;
 
 import org.bukkit.entity.Player;
 
-import zauberstuhl.BukkitUpdater.BukkitUpdater;
 import zauberstuhl.BukkitUpdater.ThreadHelper;
 
 /**
@@ -41,7 +40,6 @@ import zauberstuhl.BukkitUpdater.ThreadHelper;
 */
 
 public class Downloader extends Thread{
-	private final BukkitUpdater plugin = new BukkitUpdater();
 	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
 	private String pluginName;
@@ -73,14 +71,14 @@ public class Downloader extends Thread{
 	
 	public boolean update(String pluginName) throws IllegalStateException, MalformedURLException, ProtocolException, IOException {
 		OutputStream os;
-		String dtFile = plugin.cwd+"/plugins/"+pluginName+".jar";
-		String url = th.sendData(plugin.cwd, pluginName+"::url");
+		String dtFile = th.cwd+"/plugins/"+pluginName+".jar";
+		String url = th.sendData(pluginName+"::url");
 		
 		if (url.equalsIgnoreCase("false")) {
 			return false;
 		}
 		
-		backup(dtFile, plugin.cwd+"/plugins/BukkitUpdater/backup/"+pluginName+".jar");
+		backup(dtFile, th.cwd+"/plugins/BukkitUpdater/backup/"+pluginName+".jar");
 		os = new FileOutputStream(dtFile);
 		downloadFile(url, os);
 		return true;

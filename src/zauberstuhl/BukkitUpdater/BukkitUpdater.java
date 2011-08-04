@@ -1,6 +1,6 @@
 package zauberstuhl.BukkitUpdater;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
@@ -12,6 +12,9 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import ru.tehkode.permissions.PermissionManager;
+import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 import zauberstuhl.BukkitUpdater.Async.Downloader;
 import zauberstuhl.BukkitUpdater.Async.Overview;
@@ -49,7 +52,7 @@ public class BukkitUpdater extends JavaPlugin {
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	
 	public PermissionHandler permissionHandler;
-	public String cwd = System.getProperty("user.dir");
+	public PermissionManager permissionExHandler;
 	
 	@Override
 	public void onDisable() {
@@ -129,57 +132,94 @@ public class BukkitUpdater extends JavaPlugin {
 	
 	public void setupBukkitUpdater(){
 		String uuid = UUID.randomUUID().toString();
-		File txt = new File(cwd+"/plugins/BukkitUpdater/token.txt");
-		File folder = new File(cwd +"/plugins/BukkitUpdater/");
-		File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 		
-		if (!folder.exists())
-			if (!folder.mkdir()) {
-				th.console.sendMessage("[BukkitUpdater] Creating main directory failed!");
+		if (!th.folder.exists())
+			if (!th.folder.mkdir()) {
+				th.console.sendMessage("[BukkitUpdater][WARN] Creating main directory failed!");
 				onDisable();
 			}
-		if (!backupFolder.exists())
-			if (!backupFolder.mkdir()) {
-				th.console.sendMessage("[BukkitUpdater] Creating backup directory failed!");
+		if (!th.backupFolder.exists())
+			if (!th.backupFolder.mkdir()) {
+				th.console.sendMessage("[BukkitUpdater][WARN] Creating backup directory failed!");
 				onDisable();
 			}
 						
-		if (!txt.exists()) {
-			th.writeToFile(txt, uuid);
-			th.console.sendMessage("[BukkitUpdater] Created token:");
-			th.console.sendMessage("[BukkitUpdater] "+uuid);
-			String buffer = th.sendData(cwd, uuid);
-			if (buffer.equals("success")) {
-				th.console.sendMessage("[BukkitUpdater] Send token success");
-			} else
-				th.console.sendMessage("[BukkitUpdater] Ups! Send token failed");
+		if (!th.token.exists()) {
+			try {
+				th.writeToFile(th.token, uuid);
+				th.console.sendMessage("[BukkitUpdater] Created token:");
+				th.console.sendMessage("[BukkitUpdater] "+uuid);
+				String buffer = th.sendData(uuid);
+				if (buffer.equals("success")) {
+					th.console.sendMessage("[BukkitUpdater] Send token success");
+				} else
+					th.console.sendMessage("[BukkitUpdater] Ups! Send token failed");
+			} catch (IOException e) {
+				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new token");
+			}
+		}
+		
+		if (!th.blacklist.exists()) {
+			String comment = "#\r++++++++++\r#\n" +
+					"# Here you can write plugin names\n" +
+					"# seperated by ',' (without the quotes)\n" +
+					"# if they are not to be tested for their topicality.\n\n" +
+					"# e.g.:\n" +
+					"TestPluginName1,\n" +
+					"TestPluginName2,\n" +
+					"TsetPluginName3\n";
+			try {
+				th.writeToFile(th.blacklist, comment);
+				th.console.sendMessage("[BukkitUpdater] Created new blacklist");
+			} catch (IOException e) {
+				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new blacklist");
+			}
 		}
 		
 		//setting up permissions
-		if (permissionHandler != null)
-			return;
-		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
-	    if (permissionsPlugin == null) {
-	        th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to OP");
-	        return;
-	    }
-	    permissionHandler = ((Permissions) permissionsPlugin).getHandler();
-	    th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsPlugin).getDescription().getFullName());
+		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
+		Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
+		
+		if (permissions != null) {
+			permissionHandler = ((Permissions) permissions).getHandler();
+	    	th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
+		} else if (permissionsEx != null) {
+			permissionExHandler = PermissionsEx.getPermissionManager();
+			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsEx).getDescription().getFullName());
+		} else {
+			permissionHandler = null;
+			permissionExHandler = null;
+			th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");
+		}
+	    
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){
 		if (player == null)
 			return true;
-		
-		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
-	    if (permissionsPlugin == null)
+				
+		if (permissionHandler == null && permissionExHandler == null)
 	    	return player.isOp();
 	    else {
-	    	if (this.permissionHandler.has(player, "BukkitUpdater."+perm))
-	    		return true;
-	    	else {
-	    		if (notify)
-	    			th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    	// permissionex
+	    	if (permissionHandler == null) {
+	    		if (this.permissionExHandler.has(player, "BukkitUpdater."+perm))
+	    			return true;
+	    		else {
+	    			if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    			return false;
+	    		}
+	    	}
+	    	// theyeti permission
+	    	else if (permissionExHandler == null) {
+	    		if (this.permissionHandler.has(player, "BukkitUpdater."+perm))
+		    		return true;
+	    		else {
+	    			if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    			return false;
+	    		}
+	    	} else {
+	    		th.sendTo(player, "GRAY", "(WTF? This is a bug :S)");
 	    		return false;
 	    	}
 	    }

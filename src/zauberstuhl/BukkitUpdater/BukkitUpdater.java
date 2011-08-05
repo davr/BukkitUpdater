@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.tehkode.permissions.PermissionManager;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
+import zauberstuhl.BukkitUpdater.Async.Debugger;
 import zauberstuhl.BukkitUpdater.Async.Downloader;
 import zauberstuhl.BukkitUpdater.Async.Overview;
 import zauberstuhl.BukkitUpdater.Async.Reloader;
@@ -155,7 +156,9 @@ public class BukkitUpdater extends JavaPlugin {
 				} else
 					th.console.sendMessage("[BukkitUpdater] Ups! Send token failed");
 			} catch (IOException e) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new token");
+				// debugger
+				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+						new Debugger(null, e.getMessage(), "[BukkitUpdater][WARN] Was not able to create a new token"));
 			}
 		}
 		
@@ -172,7 +175,9 @@ public class BukkitUpdater extends JavaPlugin {
 				th.writeToFile(th.blacklist, comment);
 				th.console.sendMessage("[BukkitUpdater] Created new blacklist");
 			} catch (IOException e) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new blacklist");
+				// debugger
+				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+						new Debugger(null, e.getMessage(), "[BukkitUpdater][WARN] Was not able to create a new blacklist"));
 			}
 		}
 		

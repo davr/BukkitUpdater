@@ -35,7 +35,7 @@ public class Reloader extends Thread {
 				return;
 			}
 		} catch (NullPointerException e) {
-			th.sendTo(player, "GRAY", "(Something went wrong)");
+			new Debugger(player, e.getMessage(), "(Something went wrong)");
 		}
 	}
 }

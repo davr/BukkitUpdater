@@ -43,15 +43,17 @@ import org.bukkit.entity.Player;
 public class ThreadHelper {
 	public ColouredConsoleSender console = new ColouredConsoleSender(
 			(CraftServer) Bukkit.getServer());
-	
+	// current working directory
 	public String cwd = System.getProperty("user.dir");
-	
+	// token for adding static links
 	public File token = new File(cwd+"/plugins/BukkitUpdater/token.txt");
-	
+	// you can hide plugins with that list
 	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.txt");
-	
+	// will log all the debug information
+	public File debugLog = new File(cwd+"/plugins/BukkitUpdater/debug.log");
+	// main folder
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
-	
+	// backup folder
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
 	public String sendData(String send) throws IOException{

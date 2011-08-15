@@ -169,8 +169,7 @@ public class BukkitUpdater extends JavaPlugin {
 					"# if they are not to be tested for their topicality.\n\n" +
 					"# e.g.:\n" +
 					"TestPluginName1,\n" +
-					"TestPluginName2,\n" +
-					"TsetPluginName3\n";
+					"TestPluginName2,\n";
 			try {
 				th.writeToFile(th.blacklist, comment);
 				th.console.sendMessage("[BukkitUpdater] Created new blacklist");

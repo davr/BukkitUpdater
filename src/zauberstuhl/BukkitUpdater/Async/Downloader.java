@@ -53,7 +53,7 @@ public class Downloader extends Thread{
 		try {
 			if (update(pluginName)) {
 				th.sendTo(player, "GREEN", "The plugin "+pluginName+" was successfully updated :)");
-				th.sendTo(player, "GREEN", "Please reload the server now via /reload");
+				th.sendTo(player, "GREEN", "Please reload the server or use /u2d reload <pluginName>");
 			} else {
 				th.sendTo(player, "RED", "The plugin "+pluginName+" update failed!");
 				th.sendTo(player, "RED", "You can update only plugins with the (L) behind the name.");

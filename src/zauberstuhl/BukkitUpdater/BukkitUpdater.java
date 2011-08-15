@@ -186,17 +186,23 @@ public class BukkitUpdater extends JavaPlugin {
 		Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
 		
 		if (permissions != null) {
-			permissionHandler = ((Permissions) permissions).getHandler();
-	    	th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
+			String permissionsVersion = permissions.getDescription().getVersion().replaceAll("\\.","");
+			// BukkitUpdater supported only version 3 and higher
+			if (Integer.parseInt(permissionsVersion) >= 300) {
+				permissionHandler = ((Permissions) permissions).getHandler();
+				th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
+				return;
+			} else
+				th.console.sendMessage("[BukkitUpdater] Found old plugin "+((Permissions)permissions).getDescription().getFullName());
 		} else if (permissionsEx != null) {
 			permissionExHandler = PermissionsEx.getPermissionManager();
 			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsEx).getDescription().getFullName());
-		} else {
-			permissionHandler = null;
-			permissionExHandler = null;
-			th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");
+			return;
 		}
-	    
+		
+		permissionHandler = null;
+		permissionExHandler = null;
+		th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");	    
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){

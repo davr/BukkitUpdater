@@ -1,9 +1,9 @@
 package zauberstuhl.BukkitUpdater;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,8 +83,15 @@ public class ThreadHelper {
 	}
 
 	public String readFile(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		return br.readLine();
+	    byte[] buffer = new byte[(int) file.length()];
+	    BufferedInputStream f = null;
+	    try {
+	        f = new BufferedInputStream(new FileInputStream(file));
+	        f.read(buffer);
+	    } finally {
+	        if (f != null) try { f.close(); } catch (IOException ignored) { }
+	    }
+	    return new String(buffer);
 	}
 
 	public void writeToFile(File file, String input) throws IOException {

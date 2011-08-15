@@ -96,7 +96,7 @@ public class Overview extends Thread{
 			
 			if(!buffer.equals("false") &&
 					!buffer.equals("unsupported") &&
-					blacklist(plugins[i].toString())) {
+					blacklist(name)) {
 				
 				supported += buffer+";";
 			} else if (buffer.equals("unsupported"))
@@ -113,9 +113,8 @@ public class Overview extends Thread{
 	
 	public boolean blacklist(String plugin) throws IOException {
 		// read the blacklist and separate
-		String blacklist = th.readFile(th.blacklist).replaceAll(",", "").toString();
-		
-		if (blacklist.matches("*"+plugin+"*"))
+		String blacklist = th.readFile(th.blacklist);
+		if (blacklist.indexOf(plugin+",") > 0)
 			return false;
 		return true;
 	}

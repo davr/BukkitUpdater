@@ -1,11 +1,25 @@
 name: BukkitUpdater
 main: zauberstuhl.BukkitUpdater.BukkitUpdater
-version: 0.2.6
+version: 0.2.7
 author: zauberstuhl
 description: none
 commands:
   u2d:
     description: display new updates and more
-    aliases:
     usage: /<command> [unsupported|help] [update|reload] <PluginName>
-    permission: BukkitUpdater.[usage|update|reload]
+    permissions:
+      BukkitUpdater.*:
+        description: Gives access to all BukkitUpdater commands
+        children:
+            BukkitUpdater.usage: true
+            BukkitUpdater.update: true
+            BukkitUpdater.reload: true
+      BukkitUpdater.usage:
+        description: Allows you to list outdated/unsupported plugins
+        default: op
+      BukkitUpdater.update:
+        description: Allows you to update single plugins
+        default: op
+      BukkitUpdater.reload:
+        description: Allows you to reload single plugins
+        default: op

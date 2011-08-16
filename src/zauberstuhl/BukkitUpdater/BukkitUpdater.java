@@ -16,13 +16,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.tehkode.permissions.PermissionManager;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
+
 import zauberstuhl.BukkitUpdater.Async.Debugger;
 import zauberstuhl.BukkitUpdater.Async.Downloader;
 import zauberstuhl.BukkitUpdater.Async.Overview;
 import zauberstuhl.BukkitUpdater.Async.Reloader;
-
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
 
 /**
 * BukkitUpdater 0.2.x
@@ -52,8 +52,8 @@ public class BukkitUpdater extends JavaPlugin {
 	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	
-	public PermissionHandler permissionHandler;
-	public PermissionManager permissionExHandler;
+	public static PermissionHandler permissionHandler;
+	public static PermissionManager permissionExHandler;
 	
 	@Override
 	public void onDisable() {
@@ -62,7 +62,7 @@ public class BukkitUpdater extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		PluginManager pm = getServer().getPluginManager();
+		PluginManager pm = this.getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		setupBukkitUpdater();
 		th.console.sendMessage(ChatColor.GREEN+"[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
@@ -184,54 +184,53 @@ public class BukkitUpdater extends JavaPlugin {
 		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
 		Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
 		
+		// TheYeti permission
 		if (permissions != null) {
 			String permissionsVersion = permissions.getDescription().getVersion().replaceAll("\\.","");
 			// BukkitUpdater supported only version 3 and higher
 			if (Integer.parseInt(permissionsVersion) >= 300) {
-				permissionHandler = ((Permissions) permissions).getHandler();
+				permissionHandler = ((Permissions)permissions).getHandler();
 				th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
 				return;
 			} else
 				th.console.sendMessage("[BukkitUpdater] Found old plugin "+((Permissions)permissions).getDescription().getFullName());
-		} else if (permissionsEx != null) {
+		}
+		// PermissionEx
+		if (permissionsEx != null) {
 			permissionExHandler = PermissionsEx.getPermissionManager();
 			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsEx).getDescription().getFullName());
 			return;
 		}
 		
 		permissionHandler = null;
-		permissionExHandler = null;
 		th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");	    
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){
 		if (player == null)
 			return true;
-				
-		if (permissionHandler == null && permissionExHandler == null)
-	    	return player.isOp();
-	    else {
-	    	// permissionex
-	    	if (permissionHandler == null) {
-	    		if (this.permissionExHandler.has(player, "BukkitUpdater."+perm))
-	    			return true;
-	    		else {
-	    			if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
-	    			return false;
-	    		}
-	    	}
-	    	// theyeti permission
-	    	else if (permissionExHandler == null) {
-	    		if (this.permissionHandler.has(player, "BukkitUpdater."+perm))
-		    		return true;
-	    		else {
-	    			if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
-	    			return false;
-	    		}
-	    	} else {
-	    		th.sendTo(player, "GRAY", "(WTF? This is a bug :S)");
+								
+	    // TheYeti permission
+	    if (permissionHandler != null) {
+	    	if (BukkitUpdater.permissionHandler.has(player, "BukkitUpdater."+perm))
+	    		return true;
+	    	else {
+	    		if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
 	    		return false;
 	    	}
 	    }
+	    
+	    // PermissionEx
+	    if (permissionExHandler != null) {
+	    	if (BukkitUpdater.permissionExHandler.has(player, "BukkitUpdater."+perm))
+		   		return true;
+	    	else {
+	    		if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    		return false;
+	    	}
+	    }
+
+	    // SuperPerms
+	    return player.hasPermission("BukkitUpdater."+perm);
 	}
 }

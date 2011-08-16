@@ -39,8 +39,6 @@ public class BukkitUpdaterPlayerListener extends PlayerListener {
 		Player player = event.getPlayer();
 		if (plugin.perm(player, "usage", false))
 			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin,
-					new Overview(player,
-							plugin.getServer().getPluginManager().getPlugins(),
-							"info"));
+					new Overview(player, plugin.getServer().getPluginManager().getPlugins(), "info"));
 	}
 }

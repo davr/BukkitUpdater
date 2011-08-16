@@ -52,8 +52,8 @@ public class BukkitUpdater extends JavaPlugin {
 	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	
-	public static PermissionHandler permissionHandler;
-	public static PermissionManager permissionExHandler;
+	public static PermissionHandler permissionHandler = null;
+	public static PermissionManager permissionExHandler = null;
 	
 	@Override
 	public void onDisable() {
@@ -99,9 +99,9 @@ public class BukkitUpdater extends JavaPlugin {
 					return true;
 				}
 				if (args[0].equalsIgnoreCase("unsupported")) {
-					th.sendTo(player, "RED", "Searching unsupported plugins...");
 					if (!perm(player, "usage", true))
 						return false;
+					th.sendTo(player, "RED", "Searching unsupported plugins...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
 							new Overview(player,
 									this.getServer().getPluginManager().getPlugins(),
@@ -121,8 +121,6 @@ public class BukkitUpdater extends JavaPlugin {
 					}
 				}
 				if (args[0].equalsIgnoreCase("help")) {
-					if (!perm(player, "help", true))
-						return false;
 					th.helper(player);
 					return true;
 				}
@@ -189,7 +187,7 @@ public class BukkitUpdater extends JavaPlugin {
 			String permissionsVersion = permissions.getDescription().getVersion().replaceAll("\\.","");
 			// BukkitUpdater supported only version 3 and higher
 			if (Integer.parseInt(permissionsVersion) >= 300) {
-				permissionHandler = ((Permissions)permissions).getHandler();
+				permissionHandler = ((Permissions) permissions).getHandler();
 				th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
 				return;
 			} else
@@ -198,11 +196,10 @@ public class BukkitUpdater extends JavaPlugin {
 		// PermissionEx
 		if (permissionsEx != null) {
 			permissionExHandler = PermissionsEx.getPermissionManager();
-			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissionsEx).getDescription().getFullName());
+			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+permissionsEx.getDescription().getFullName());
 			return;
 		}
 		
-		permissionHandler = null;
 		th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");	    
 	}
 	
@@ -219,7 +216,6 @@ public class BukkitUpdater extends JavaPlugin {
 	    		return false;
 	    	}
 	    }
-	    
 	    // PermissionEx
 	    if (permissionExHandler != null) {
 	    	if (BukkitUpdater.permissionExHandler.has(player, "BukkitUpdater."+perm))
@@ -229,7 +225,6 @@ public class BukkitUpdater extends JavaPlugin {
 	    		return false;
 	    	}
 	    }
-
 	    // SuperPerms
 	    return player.hasPermission("BukkitUpdater."+perm);
 	}

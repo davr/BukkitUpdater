@@ -1,15 +1,14 @@
 package zauberstuhl.BukkitUpdater;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -57,22 +56,23 @@ public class ThreadHelper {
 	// backup folder
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
-	public String sendData(String send) throws IOException{
+	public String sendData(String send) throws IOException {
 		String token = "";
+		String received = "";
+		String inputLine;
 		
 		if (this.token.exists()) {
 			token = readFile(this.token);
 		}
 		URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
-		InputStream in = adress.openStream();
-		try {
-			String scan = new Scanner( in ).useDelimiter( "\\Z" ).next();
-			return scan;
-		} catch (NoSuchElementException e) {
-			sendTo(null, "RED", "[BukkitUpdater] NoSuchElementException in sendData");
-		}
-
-		return "";
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(
+						adress.openStream()));
+		while ((inputLine = in.readLine()) != null)
+			received = received + inputLine;
+		in.close();
+		
+		return received;
 	}
 	
 	public void helper(Player player) {

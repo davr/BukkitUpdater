@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import org.bukkit.Bukkit;
@@ -64,7 +65,14 @@ public class ThreadHelper {
 		}
 		URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
 		InputStream in = adress.openStream();
-		return new Scanner( in ).useDelimiter( "\\Z" ).next();
+		try {
+			String scan = new Scanner( in ).useDelimiter( "\\Z" ).next();
+			return scan;
+		} catch (NoSuchElementException e) {
+			sendTo(null, "RED", "[BukkitUpdater] NoSuchElementException in sendData");
+		}
+
+		return "";
 	}
 	
 	public void helper(Player player) {

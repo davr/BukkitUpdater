@@ -1,19 +1,28 @@
 name: BukkitUpdater
 main: zauberstuhl.BukkitUpdater.BukkitUpdater
-version: 0.2.7
-author: zauberstuhl
-description: none
+version: 0.2.7.54
+author: zauberstuhl y33
+website: http://www.zauberstuhl.de/
+description: |
+  The plugin shows outdated plugins, if there is a static link on the database
+  you can also update this via a single command.
+database: false
 commands:
   u2d:
     description: display new updates and more
-    usage: /<command> [unsupported|help] [update|reload] <PluginName>
+    usage: |
+      /<command> - Shows outdated plugin(s)
+      /<command> unsupported - Shows unsupported plugins
+      /<command> update <PluginName> - Update the plugin if there is following tag behind the name \"(L)\"
+      /<command> reload <PluginName> - Reload the plugin e.g. after a update
+      /<command> help - Display the help page
     permissions:
       BukkitUpdater.*:
         description: Gives access to all BukkitUpdater commands
         children:
-            BukkitUpdater.usage: true
-            BukkitUpdater.update: true
-            BukkitUpdater.reload: true
+          BukkitUpdater.usage: true
+          BukkitUpdater.update: true
+          BukkitUpdater.reload: true
       BukkitUpdater.usage:
         description: Allows you to list outdated/unsupported plugins
         default: op

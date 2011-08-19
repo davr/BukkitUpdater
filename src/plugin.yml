@@ -1,6 +1,6 @@
 name: BukkitUpdater
 main: zauberstuhl.BukkitUpdater.BukkitUpdater
-version: 0.2.7.55
+version: 0.2.7.56
 author: zauberstuhl y33
 website: http://www.zauberstuhl.de/
 description: |
@@ -13,6 +13,8 @@ commands:
     usage: |
       /<command> - Shows outdated plugin(s)
       /<command> unsupported - Shows unsupported plugins
+      /<command> ignore <PluginName> - Add/Remove a plugin from the blacklist
+      /<command> ignore list - List all ignored plugins
       /<command> update <PluginName> - Update the plugin if there is following tag behind the name \"(L)\"
       /<command> reload <PluginName> - Reload the plugin e.g. after a update
       /<command> help - Display the help page
@@ -22,10 +24,13 @@ permissions:
     default: op
     children:
       BukkitUpdater.usage: true
+      BukkitUpdater.ignore: true
       BukkitUpdater.update: true
       BukkitUpdater.reload: true
   BukkitUpdater.usage:
     description: Allows you to list outdated/unsupported plugins
+  BukkitUpdater.ignore:
+    description: Add/Remove a plugin from the blacklist
   BukkitUpdater.update:
     description: Allows you to update single plugins
   BukkitUpdater.reload:

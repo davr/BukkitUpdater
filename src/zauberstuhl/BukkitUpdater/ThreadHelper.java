@@ -78,16 +78,13 @@ public class ThreadHelper {
 	public void helper(Player player) {
 		sendTo(player, "RED", "Bukkit Updater Commands:");
 		sendTo(player, "WHITE", "");
-		sendTo(player, "GOLD", "/u2d");
-		sendTo(player, "WHITE", "Shows outdated plugin(s)");
-		sendTo(player, "GOLD", "/u2d update <PluginName>");
-		sendTo(player, "WHITE", "Update the plugin if there is following tag behind the name \"(L)\"");
-		sendTo(player, "GOLD", "/u2d reload <PluginName>");
-		sendTo(player, "WHITE", "Reload the plugin e.g. after a update");
-		sendTo(player, "GOLD", "/u2d unsupported");
-		sendTo(player, "WHITE", "Shows unsupported plugins");
-		sendTo(player, "GOLD", "/u2d help");
-		sendTo(player, "WHITE", "Display this help-text");
+		sendTo(player, "GOLD", "/u2d - Shows outdated plugins");
+		sendTo(player, "GOLD", "/u2d update <PluginName> - Update the plugin if there is following tag behind the name '(L)'");
+		sendTo(player, "GOLD", "/u2d reload <PluginName> - Reload the plugin e.g. after a update");
+		sendTo(player, "GOLD", "/u2d ignore <PluginName>[,<PluginName2>, ...] - Add/Remove a plugin from the blacklist");
+		sendTo(player, "GOLD", "/u2d ignore list - List all ignored plugins");
+		sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
+		sendTo(player, "GOLD", "/u2d help - Display this help-text");
 	}
 
 	public String readFile(File file) throws IOException {

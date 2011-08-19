@@ -19,6 +19,7 @@ import ru.tehkode.permissions.bukkit.PermissionsEx;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
+import zauberstuhl.BukkitUpdater.Async.Blacklist;
 import zauberstuhl.BukkitUpdater.Async.Debugger;
 import zauberstuhl.BukkitUpdater.Async.Downloader;
 import zauberstuhl.BukkitUpdater.Async.Overview;
@@ -119,6 +120,15 @@ public class BukkitUpdater extends JavaPlugin {
 								new Reloader(player, pm, reloadPlugin));
 						return true;
 					}
+				}
+				if (args[0].equalsIgnoreCase("ignore")) {
+					if (!perm(player, "ignore", true)
+							|| args[1].equalsIgnoreCase(""))
+						return false;
+					th.sendTo(player, "RED", "Searching ignored plugins...");
+					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+							new Blacklist(player, args[1]));
+					return true;
 				}
 				if (args[0].equalsIgnoreCase("help")) {
 					th.helper(player);

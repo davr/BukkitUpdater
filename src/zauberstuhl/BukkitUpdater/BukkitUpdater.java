@@ -61,8 +61,8 @@ public class BukkitUpdater extends JavaPlugin {
 	}
 
 	@Override
-	public void onEnable() {
-		PluginManager pm = this.getServer().getPluginManager();
+	public void onEnable() {		
+		PluginManager pm = this.getServer().getPluginManager();	
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		setupBukkitUpdater();
 		th.console.sendMessage(ChatColor.GREEN+"[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
@@ -181,17 +181,22 @@ public class BukkitUpdater extends JavaPlugin {
 		//setting up permissions
 		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
 		Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
+		Plugin permissionsBukkit = this.getServer().getPluginManager().getPlugin("PermissionsBukkit");
 		
-		// TheYeti permission
+		// PermissionsBukkit
+		if (permissionsBukkit != null) {
+			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+permissionsBukkit.getDescription().getFullName());
+			return;
+		}
+		// Permissions (TheYeti)
 		if (permissions != null) {
 			String permissionsVersion = permissions.getDescription().getVersion().replaceAll("\\.","");
-			// BukkitUpdater supported only version 3 and higher
-			if (Integer.parseInt(permissionsVersion) >= 300) {
+			// version > 2.5
+			if (Integer.parseInt(permissionsVersion) >= 250) {
 				permissionHandler = ((Permissions) permissions).getHandler();
 				th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
 				return;
-			} else
-				th.console.sendMessage("[BukkitUpdater] Found old plugin "+((Permissions)permissions).getDescription().getFullName());
+			}
 		}
 		// PermissionEx
 		if (permissionsEx != null) {
@@ -199,7 +204,7 @@ public class BukkitUpdater extends JavaPlugin {
 			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+permissionsEx.getDescription().getFullName());
 			return;
 		}
-		
+
 		th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");	    
 	}
 	
@@ -225,7 +230,7 @@ public class BukkitUpdater extends JavaPlugin {
 	    		return false;
 	    	}
 	    }
-	    // SuperPerms
+	    // SuperPermissions
 	    return player.hasPermission("BukkitUpdater."+perm);
 	}
 }

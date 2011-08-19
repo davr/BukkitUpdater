@@ -50,9 +50,10 @@ public class Overview extends Thread{
 		String[] supported;
 		String[] unsupported;
 
-		// start a lookup
 		try {
+			// start a lookup
 			boolean u2d = u2d(player);
+			
 			if (action.equalsIgnoreCase("info")) {
 				if (u2d) th.sendTo(player, "RED", "New Updates available!! /u2d for details");
 			} else if (action.equalsIgnoreCase("unsupported")) {

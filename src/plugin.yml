@@ -16,19 +16,17 @@ commands:
       /<command> update <PluginName> - Update the plugin if there is following tag behind the name \"(L)\"
       /<command> reload <PluginName> - Reload the plugin e.g. after a update
       /<command> help - Display the help page
-    permissions:
-      BukkitUpdater.*:
-        description: Gives access to all BukkitUpdater commands
-        children:
-          BukkitUpdater.usage: true
-          BukkitUpdater.update: true
-          BukkitUpdater.reload: true
-      BukkitUpdater.usage:
-        description: Allows you to list outdated/unsupported plugins
-        default: op
-      BukkitUpdater.update:
-        description: Allows you to update single plugins
-        default: op
-      BukkitUpdater.reload:
-        description: Allows you to reload single plugins
-        default: op
+permissions:
+  BukkitUpdater.*:
+    description: Gives access to all BukkitUpdater commands
+    default: op
+    children:
+      BukkitUpdater.usage: true
+      BukkitUpdater.update: true
+      BukkitUpdater.reload: true
+  BukkitUpdater.usage:
+    description: Allows you to list outdated/unsupported plugins
+  BukkitUpdater.update:
+    description: Allows you to update single plugins
+  BukkitUpdater.reload:
+    description: Allows you to reload single plugins

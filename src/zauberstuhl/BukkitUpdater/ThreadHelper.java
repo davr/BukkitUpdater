@@ -81,7 +81,7 @@ public class ThreadHelper {
 		sendTo(player, "GOLD", "/u2d - Shows outdated plugins");
 		sendTo(player, "GOLD", "/u2d update <PluginName> - Update the plugin if there is following tag behind the name '(L)'");
 		sendTo(player, "GOLD", "/u2d reload <PluginName> - Reload the plugin e.g. after a update");
-		sendTo(player, "GOLD", "/u2d ignore <PluginName>[,<PluginName2>, ...] - Add/Remove a plugin from the blacklist");
+		sendTo(player, "GOLD", "/u2d ignore <PluginName> - Add/Remove a plugin from the blacklist");
 		sendTo(player, "GOLD", "/u2d ignore list - List all ignored plugins");
 		sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
 		sendTo(player, "GOLD", "/u2d help - Display this help-text");

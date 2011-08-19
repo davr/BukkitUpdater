@@ -19,9 +19,6 @@ public class Blacklist extends Thread {
 	}
 	
 	public void run() {
-		// are there multiple plugins?
-		input = input.replaceAll(",", ",\n");
-		
 		try {
 			String blacklist = th.readFile(th.blacklist);
 			Pattern pattern = Pattern.compile("(?i).*"+input+".*", Pattern.MULTILINE);
@@ -35,10 +32,10 @@ public class Blacklist extends Thread {
 				if (matcher.find()) {
 					blacklist = blacklist.replaceAll(input+",\n", "");
 					th.writeToFile(th.blacklist, blacklist);
-					th.sendTo(player, "GRAY", "(The plugin(s) "+input+" was/were deleted from blacklist.txt)");
+					th.sendTo(player, "GRAY", "(The plugin(s) was/were deleted from blacklist.txt)");
 				} else {
 					th.writeToFile(th.blacklist, blacklist+input+",\n");
-					th.sendTo(player, "GRAY", "(The plugin(s) "+input+" was/were written to blacklist.txt)");
+					th.sendTo(player, "GRAY", "(The plugin(s) was/were written to blacklist.txt)");
 				}
 			}			
 		} catch (IOException e) {

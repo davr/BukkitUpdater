@@ -171,8 +171,7 @@ public class BukkitUpdater extends JavaPlugin {
 		}
 		
 		if (!th.blacklist.exists()) {
-			String comment = "#  ++++++++++  #\n" +
-					"# Here you can write plugin names\n" +
+			String comment = "# Here you can write plugin names\n" +
 					"# seperated by ',' (without the quotes)\n" +
 					"# if they are not to be tested for their topicality.\n\n" +
 					"# e.g.:\n" +

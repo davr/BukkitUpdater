@@ -115,7 +115,7 @@ public class Overview extends Thread{
 	public boolean blacklist(String plugin) throws IOException {
 		// read the blacklist and separate
 		String blacklist = th.readFile(th.blacklist);
-		if (blacklist.indexOf(plugin+",") > 0)
+		if (blacklist.indexOf(plugin) > 0)
 			return false;
 		return true;
 	}

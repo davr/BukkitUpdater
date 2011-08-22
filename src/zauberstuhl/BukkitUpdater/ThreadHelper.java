@@ -49,8 +49,6 @@ public class ThreadHelper {
 	public File token = new File(cwd+"/plugins/BukkitUpdater/token.txt");
 	// you can hide plugins with that list
 	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.txt");
-	// will log all the debug information
-	public File debugLog = new File(cwd+"/plugins/BukkitUpdater/debug.log");
 	// main folder
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
 	// backup folder

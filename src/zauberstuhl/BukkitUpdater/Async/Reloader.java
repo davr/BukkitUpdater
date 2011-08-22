@@ -43,6 +43,11 @@ public class Reloader extends Thread {
 	}
 	
 	public void run() {
+		if (plugin.getDescription().getName().equalsIgnoreCase("BukkitUpdater")) {
+			th.sendTo(player, "RED", "BukkitUpdater cannot restart on his own. Please reload the server ...");
+			return;
+		}
+		
 		try {
 			pm.disablePlugin(plugin);
 			if (!pm.isPluginEnabled(plugin)) {
@@ -59,7 +64,7 @@ public class Reloader extends Thread {
 				return;
 			}
 		} catch (NullPointerException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		}
 	}
 }

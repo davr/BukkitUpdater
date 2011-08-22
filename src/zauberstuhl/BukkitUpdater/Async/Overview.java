@@ -78,7 +78,7 @@ public class Overview extends Thread{
 				}			
 			}
 		} catch (IOException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		}
 	}
 	

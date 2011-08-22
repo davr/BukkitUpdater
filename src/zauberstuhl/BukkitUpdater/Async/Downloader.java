@@ -59,13 +59,13 @@ public class Downloader extends Thread{
 				th.sendTo(player, "RED", "You can update only plugins with the (L) behind the name.");
 			}
 		} catch (IllegalStateException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		} catch (MalformedURLException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		} catch (ProtocolException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		} catch (IOException e) {
-			new Debugger(player, e.getMessage(), "(Something went wrong)");
+			th.sendTo(player, "GRAY", "(Something went wrong)");
 		}
 	}
 	

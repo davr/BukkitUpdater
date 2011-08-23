@@ -74,11 +74,14 @@ public class Overview extends Thread{
 					th.sendTo(player, "GREEN", "Currently there are no new updates available.");
 				if (unsupportedPlugins.matches(".*;.*")) {
 					unsupported = unsupportedPlugins.split(";");
-					th.sendTo(player, "RED", "There is/are "+unsupported.length+" unspported plugin(s). For more info: /u2d unsupported");
+					th.sendTo(player, "RED", "There is/are "+unsupported.length+" unsupported plugin(s). For more info: /u2d unsupported");
 				}			
 			}
 		} catch (IOException e) {
-			th.sendTo(player, "GRAY", "(Something went wrong)");
+			if (e.toString().matches(".*Connection\\stimed\\sout.*"))
+				th.sendTo(player, "RED", "(The database is currently not available)");
+			else
+				th.sendTo(player, "GRAY", "(Something went wrong)");
 		}
 	}
 	

@@ -62,7 +62,8 @@ public class ThreadHelper {
 		if (this.token.exists()) {
 			token = readFile(this.token);
 		}
-		URL adress = new URL( "http://mc.zauberstuhl.de/bukkit_updater/lookup.pl?s="+send+"&t="+token );
+		// ADD SOME SERVER FILE for dudes who want to add there own thinks blabal
+		URL adress = new URL( "http://bukkit.zauberstuhl.de/lookup.pl?s="+send+"&t="+token );
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						adress.openStream()));

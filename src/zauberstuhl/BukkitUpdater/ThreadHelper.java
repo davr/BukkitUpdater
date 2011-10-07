@@ -41,8 +41,7 @@ import org.bukkit.entity.Player;
 */
 
 public class ThreadHelper {
-	public ColouredConsoleSender console = new ColouredConsoleSender(
-			(CraftServer) Bukkit.getServer());
+	public ConsoleCommandSender console = ((CraftServer) Bukkit.getServer()).getConsoleSender();
 	// current working directory
 	public String cwd = System.getProperty("user.dir");
 	// token for adding static links

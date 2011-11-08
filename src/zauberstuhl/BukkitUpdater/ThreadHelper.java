@@ -9,11 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Player;
 
 /**
@@ -41,16 +40,11 @@ import org.bukkit.entity.Player;
 */
 
 public class ThreadHelper {
-	public ConsoleCommandSender console = ((CraftServer) Bukkit.getServer()).getConsoleSender();
-	// current working directory
+	protected static final Logger console = Logger.getLogger("Minecraft");
 	public String cwd = System.getProperty("user.dir");
-	// token for adding static links
 	public File token = new File(cwd+"/plugins/BukkitUpdater/token.txt");
-	// you can hide plugins with that list
 	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.txt");
-	// main folder
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
-	// backup folder
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
 	public String sendData(String send) throws IOException {
@@ -61,8 +55,7 @@ public class ThreadHelper {
 		if (this.token.exists()) {
 			token = readFile(this.token);
 		}
-		// ADD SOME SERVER FILE for dudes who want to add there own thinks blabal
-		URL adress = new URL( "http://bukkit.zauberstuhl.de/lookup.pl?s="+send+"&t="+token );
+		URL adress = new URL( "http://bukkit.3nc0.de/lookup.pl?s="+send+"&t="+token );
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						adress.openStream()));
@@ -106,7 +99,7 @@ public class ThreadHelper {
 	public void sendTo(Player player, String color, String string) {
 		if (player == null) {
 			if (!string.equalsIgnoreCase(""))
-				console.sendMessage(ChatColor.valueOf(color)+string);
+				console.log(Level.INFO, string);
 		} else {
 			player.sendMessage(ChatColor.valueOf(color)+string);
 		}

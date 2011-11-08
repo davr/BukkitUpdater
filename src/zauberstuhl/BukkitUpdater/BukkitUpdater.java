@@ -2,8 +2,9 @@ package zauberstuhl.BukkitUpdater;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -49,15 +50,15 @@ import zauberstuhl.BukkitUpdater.Async.Reloader;
 */
 
 public class BukkitUpdater extends JavaPlugin {
+	protected static final Logger console = Logger.getLogger("Minecraft");
 	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
-	
 	public static PermissionHandler permissionHandler = null;
 	public static PermissionManager permissionExHandler = null;
 	
 	@Override
 	public void onDisable() {
-		th.console.sendMessage(ChatColor.RED+"[BukkitUpdater] version " + this.getDescription().getVersion() + " disabled.");
+		console.log(Level.INFO, "[BukkitUpdater] version " + this.getDescription().getVersion() + " disabled.");
 	}
 
 	@Override
@@ -65,7 +66,7 @@ public class BukkitUpdater extends JavaPlugin {
 		PluginManager pm = this.getServer().getPluginManager();	
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
 		setupBukkitUpdater();
-		th.console.sendMessage(ChatColor.GREEN+"[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
+		console.log(Level.INFO, "[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
 	}
 		
 	@Override
@@ -143,27 +144,27 @@ public class BukkitUpdater extends JavaPlugin {
 		
 		if (!th.folder.exists())
 			if (!th.folder.mkdir()) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Creating main directory failed!");
+				console.log(Level.INFO, "[BukkitUpdater][WARN] Creating main directory failed!");
 				onDisable();
 			}
 		if (!th.backupFolder.exists())
 			if (!th.backupFolder.mkdir()) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Creating backup directory failed!");
+				console.log(Level.INFO, "[BukkitUpdater][WARN] Creating backup directory failed!");
 				onDisable();
 			}
 						
 		if (!th.token.exists()) {
 			try {
 				th.writeToFile(th.token, uuid);
-				th.console.sendMessage("[BukkitUpdater] Created token:");
-				th.console.sendMessage("[BukkitUpdater] "+uuid);
+				console.log(Level.INFO, "[BukkitUpdater] Created token:");
+				console.log(Level.INFO, "[BukkitUpdater] "+uuid);
 				String buffer = th.sendData(uuid);
 				if (buffer.equals("success")) {
-					th.console.sendMessage("[BukkitUpdater] Send token success");
+					console.log(Level.INFO, "[BukkitUpdater] Send token success");
 				} else
-					th.console.sendMessage("[BukkitUpdater] Ups! Send token failed");
+					console.log(Level.INFO, "[BukkitUpdater] Ups! Send token failed");
 			} catch (IOException e) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new token");
+				console.log(Level.INFO, "[BukkitUpdater][WARN] Was not able to create a new token");
 			}
 		}
 		
@@ -176,9 +177,9 @@ public class BukkitUpdater extends JavaPlugin {
 					"TestPluginName2,\n";
 			try {
 				th.writeToFile(th.blacklist, comment);
-				th.console.sendMessage("[BukkitUpdater] Created new blacklist");
+				console.log(Level.INFO, "[BukkitUpdater] Created new blacklist");
 			} catch (IOException e) {
-				th.console.sendMessage("[BukkitUpdater][WARN] Was not able to create a new blacklist");
+				console.log(Level.INFO, "[BukkitUpdater][WARN] Was not able to create a new blacklist");
 			}
 		}
 		
@@ -189,7 +190,7 @@ public class BukkitUpdater extends JavaPlugin {
 		
 		// PermissionsBukkit
 		if (permissionsBukkit != null) {
-			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+permissionsBukkit.getDescription().getFullName());
+			console.log(Level.INFO, "[BukkitUpdater] Found and will use plugin "+permissionsBukkit.getDescription().getFullName());
 			return;
 		}
 		// Permissions (TheYeti)
@@ -198,18 +199,18 @@ public class BukkitUpdater extends JavaPlugin {
 			// version > 2.5
 			if (Integer.parseInt(permissionsVersion) >= 250) {
 				permissionHandler = ((Permissions) permissions).getHandler();
-				th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
+				console.log(Level.INFO, "[BukkitUpdater] Found and will use plugin "+((Permissions)permissions).getDescription().getFullName());
 				return;
 			}
 		}
 		// PermissionEx
 		if (permissionsEx != null) {
 			permissionExHandler = PermissionsEx.getPermissionManager();
-			th.console.sendMessage("[BukkitUpdater] Found and will use plugin "+permissionsEx.getDescription().getFullName());
+			console.log(Level.INFO, "[BukkitUpdater] Found and will use plugin "+permissionsEx.getDescription().getFullName());
 			return;
 		}
 
-		th.console.sendMessage("[BukkitUpdater] Permission system not detected, defaulting to Op");	    
+		console.log(Level.INFO, "[BukkitUpdater] Permission system not detected, defaulting to Op");	    
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){

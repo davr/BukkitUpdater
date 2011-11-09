@@ -86,31 +86,27 @@ public class Overview extends Thread{
 	}
 	
 	public boolean u2d(Player player) throws IOException{
-		String allVersions = "";
-		String supported = "";
-		String unsupported = "";
-		String buffer;
+		String data = "";
+		String response;
 		
 		for(int i = 0; i < plugins.length; i++){
 			String version = plugins[i].getDescription().getVersion();
 			String name = plugins[i].getDescription().getName();
-			buffer = name+"::"+version;
-			allVersions += name+"::"+version+",";
-			buffer = th.sendData(buffer);			
-			
-			if(!buffer.equals("false") &&
-					!buffer.equals("unsupported") &&
-					blacklist(name)) {
-				
-				supported += buffer+";";
-			} else if (buffer.equals("unsupported"))
-				unsupported += plugins[i]+";";
+			data += name+":"+version+"::";
 		}
-		supportedPlugins = supported;
-		unsupportedPlugins = unsupported;
-		
-		buffer = th.sendData(allVersions);
-		if(!buffer.equals("false"))
+		response = th.sendData(data);
+
+		String []result = response.split(":");
+		for(int i = 0; i < result.length; i++) {
+			int x = Integer.parseInt(result[i]);
+			if (x == 1) {
+				supportedPlugins += plugins[i]+";";
+			} else if (x == 2) {
+				unsupportedPlugins += plugins[i]+";";
+			}
+		}
+		// are there updates?
+		if(!response.matches("1"))
 			return true;
 		return false;
 	}

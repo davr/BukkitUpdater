@@ -42,27 +42,21 @@ import org.bukkit.entity.Player;
 public class ThreadHelper {
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	public String cwd = System.getProperty("user.dir");
-	public File token = new File(cwd+"/plugins/BukkitUpdater/token.txt");
-	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.txt");
+	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.yml");
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
 	public String sendData(String send) throws IOException {
-		String token = "";
 		String received = "";
 		String inputLine;
 		
-		if (this.token.exists()) {
-			token = readFile(this.token);
-		}
-		URL adress = new URL( "http://bukkit.3nc0.de/lookup.pl?s="+send+"&t="+token );
+		URL adress = new URL( "http://bukkit.3nc0.de/request.pl?s="+send );
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 						adress.openStream()));
 		while ((inputLine = in.readLine()) != null)
-			received = received + inputLine;
+			received += inputLine;
 		in.close();
-		
 		return received;
 	}
 	
@@ -77,7 +71,7 @@ public class ThreadHelper {
 		sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
 		sendTo(player, "GOLD", "/u2d help - Display this help-text");
 	}
-
+	
 	public String readFile(File file) throws IOException {
 	    byte[] buffer = new byte[(int) file.length()];
 	    BufferedInputStream f = null;

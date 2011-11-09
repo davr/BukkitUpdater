@@ -1,12 +1,15 @@
 package zauberstuhl.BukkitUpdater;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -140,48 +143,24 @@ public class BukkitUpdater extends JavaPlugin {
 	}
 	
 	public void setupBukkitUpdater(){
-		String uuid = UUID.randomUUID().toString();
-		
-		if (!th.folder.exists())
-			if (!th.folder.mkdir()) {
-				console.log(Level.INFO, "[BukkitUpdater][WARN] Creating main directory failed!");
-				onDisable();
+		FileConfiguration config = this.getConfig();
+		File blConfigurationFile = new File(getDataFolder(), "blacklist.yml");
+
+		if (!blConfigurationFile.exists()) {
+			List<String> blst = Arrays.asList("PluginName1", "PluginName2");
+			config.set("plugins", blst);
+			try {
+				config.save(blConfigurationFile);
+			} catch (IOException e) {
+				console.log(Level.WARNING, "Was not able to save blacklist.yml: "+e.getMessage());
 			}
+		}
+		
 		if (!th.backupFolder.exists())
 			if (!th.backupFolder.mkdir()) {
 				console.log(Level.INFO, "[BukkitUpdater][WARN] Creating backup directory failed!");
 				onDisable();
 			}
-						
-		if (!th.token.exists()) {
-			try {
-				th.writeToFile(th.token, uuid);
-				console.log(Level.INFO, "[BukkitUpdater] Created token:");
-				console.log(Level.INFO, "[BukkitUpdater] "+uuid);
-				String buffer = th.sendData(uuid);
-				if (buffer.equals("success")) {
-					console.log(Level.INFO, "[BukkitUpdater] Send token success");
-				} else
-					console.log(Level.INFO, "[BukkitUpdater] Ups! Send token failed");
-			} catch (IOException e) {
-				console.log(Level.INFO, "[BukkitUpdater][WARN] Was not able to create a new token");
-			}
-		}
-		
-		if (!th.blacklist.exists()) {
-			String comment = "# Here you can write plugin names\n" +
-					"# seperated by ',' (without the quotes)\n" +
-					"# if they are not to be tested for their topicality.\n\n" +
-					"# e.g.:\n" +
-					"TestPluginName1,\n" +
-					"TestPluginName2,\n";
-			try {
-				th.writeToFile(th.blacklist, comment);
-				console.log(Level.INFO, "[BukkitUpdater] Created new blacklist");
-			} catch (IOException e) {
-				console.log(Level.INFO, "[BukkitUpdater][WARN] Was not able to create a new blacklist");
-			}
-		}
 		
 		//setting up permissions
 		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");

@@ -42,7 +42,7 @@ import org.bukkit.entity.Player;
 public class ThreadHelper {
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	public String cwd = System.getProperty("user.dir");
-	public File blacklist = new File(cwd+"/plugins/BukkitUpdater/blacklist.yml");
+	public File config = new File(cwd+"/plugins/BukkitUpdater/config.yml");
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
@@ -63,12 +63,12 @@ public class ThreadHelper {
 	public void helper(Player player) {
 		sendTo(player, "RED", "Bukkit Updater Commands:");
 		sendTo(player, "WHITE", "");
-		sendTo(player, "GOLD", "/u2d - Shows outdated plugins");
-		sendTo(player, "GOLD", "/u2d update <PluginName> - Update the plugin if there is following tag behind the name '(L)'");
+		sendTo(player, "GOLD", "/u2d - Shows updated plugin(s)");
+		//sendTo(player, "GOLD", "/u2d update <PluginName> - Update the plugin if there is following tag behind the name '(L)'");
 		sendTo(player, "GOLD", "/u2d reload <PluginName> - Reload the plugin e.g. after a update");
-		sendTo(player, "GOLD", "/u2d ignore <PluginName> - Add/Remove a plugin from the blacklist");
 		sendTo(player, "GOLD", "/u2d ignore list - List all ignored plugins");
-		sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
+		sendTo(player, "GOLD", "/u2d ignore <PluginName> - Add/Remove a plugin from the blacklist");
+		//sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
 		sendTo(player, "GOLD", "/u2d help - Display this help-text");
 	}
 	

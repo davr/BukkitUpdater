@@ -1,21 +1,18 @@
 name: BukkitUpdater
-main: zauberstuhl.BukkitUpdater.BukkitUpdater
-version: 2.0.0.20
-author: zauberstuhl y33
-website: http://www.zauberstuhl.de/
+main: de.enco.BukkitUpdater.BukkitUpdater
+version: 2.0.1.0
+author: 3nc0_de
+website: http://www.3nc0.de/
 description: |
-  The plugin shows outdated plugins, if there is a static link on the database
-  you can also update this via a single command.
+  The plugin updated outdated plugins, if there is a static link on the database.
 database: false
 commands:
   u2d:
-    description: display new updates and more
+    description: updated outdated plugins and more
     usage: |
-      /<command> - Shows outdated plugin(s)
-      /<command> unsupported - Shows unsupported plugins
+      /<command> - Shows updated plugin(s)
       /<command> ignore <PluginName> - Add/Remove a plugin from the blacklist
       /<command> ignore list - List all ignored plugins
-      /<command> update <PluginName> - Update the plugin if there is following tag behind the name \"(L)\"
       /<command> reload <PluginName> - Reload the plugin e.g. after a update
       /<command> help - Display the help page
 permissions:
@@ -23,15 +20,12 @@ permissions:
     description: Gives access to all BukkitUpdater commands
     default: op
     children:
-      BukkitUpdater.usage: true
+      BukkitUpdater.info: true
       BukkitUpdater.ignore: true
-      BukkitUpdater.update: true
       BukkitUpdater.reload: true
-  BukkitUpdater.usage:
-    description: Allows you to list outdated/unsupported plugins
+  BukkitUpdater.info:
+    description: Allows you to list informations about updated plugins
   BukkitUpdater.ignore:
     description: Add/Remove a plugin from the blacklist
-  BukkitUpdater.update:
-    description: Allows you to update single plugins
   BukkitUpdater.reload:
     description: Allows you to reload single plugins

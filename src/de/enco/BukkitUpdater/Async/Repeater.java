@@ -2,6 +2,7 @@ package de.enco.BukkitUpdater.Async;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,11 +11,16 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
@@ -36,64 +42,58 @@ public class Repeater extends Thread{
 	
 	public void run() {
 		//debug
-		console.log(Level.WARNING, "[DEBUG] STARTING UPDATE MODE");
-		
+		//console.log(Level.WARNING, "[DEBUG] STARTING UPDATE MODE");
 		PluginManager pm = bu.getServer().getPluginManager();
 		Plugin[] plugins = pm.getPlugins();
 		try {
 			if (lookup(plugins)) {
 				//debug
-				console.log(Level.WARNING, "[DEBUG] supported: "+supported.toString());
-				console.log(Level.WARNING, "[DEBUG] needUpdate: "+needUpdate.toString());
-				console.log(Level.WARNING, "[DEBUG] unsupported: "+unsupported.toString());
-				
+				//console.log(Level.WARNING, "[DEBUG] supported: "+supported.toString());
+				//console.log(Level.WARNING, "[DEBUG] needUpdate: "+needUpdate.toString());
+				//console.log(Level.WARNING, "[DEBUG] unsupported: "+unsupported.toString());
 				for (int i=0; i < needUpdate.size(); i++) {
 					String plugin = needUpdate.get(i).getDescription().getName();
-					console.log(Level.WARNING, "[DEBUG] update: "+plugin);
+					//console.log(Level.WARNING, "[DEBUG] update: "+plugin);
 					if (update(plugin)) {
+						saveUpdateTime(plugin);
 						bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully updated.");
 						if (reload(bu, pm, pm.getPlugin(plugin)))
 							bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully reloaded.");
 						else
-							bu.getServer().broadcastMessage(ChatColor.RED+"Please reload the server manually!");
+							bu.getServer().broadcastMessage(ChatColor.RED+"Please reload the plugin "+plugin+" manually!");
 					} else {
 						console.log(Level.WARNING, "The plugin "+plugin+" update failed!");
 					}
 				}
-			} else
-				console.log(Level.WARNING, "(3nc0.de not reachable)");
+			}
 		} catch (IllegalStateException e) {
-			console.log(Level.WARNING, "[DEBUG] "+e.getMessage());
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (MalformedURLException e) {
-			console.log(Level.WARNING, "[DEBUG] "+e.getMessage());
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (ProtocolException e) {
-			console.log(Level.WARNING, "[DEBUG] "+e.getMessage());
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (IOException e) {
-			console.log(Level.WARNING, "[DEBUG] "+e.getMessage());
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+		} catch (InvalidConfigurationException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		}
 	}
 	
-	public boolean update(String pluginName) throws IllegalStateException, MalformedURLException, ProtocolException, IOException {
-		OutputStream os;
-		String url = th.sendData(pluginName+":url");
-		
-		console.log(Level.WARNING, "[DEBUG] link = "+pluginName+":"+url);
-		
-		if (url.equalsIgnoreCase("false") || url.equalsIgnoreCase("")) {
+	public boolean update(String pluginName) throws IOException {
+		String requestedUrl = th.sendData(pluginName+":url");
+		//console.log(Level.WARNING, "[DEBUG] link = "+pluginName+":"+url);
+		if (requestedUrl.equalsIgnoreCase("false")
+				|| requestedUrl.equalsIgnoreCase("")) {
 			return false;
 		}
-
+		/*
+		 * First of all backup
+		 * the old versions
+		 */
 		backup(pluginName);
 		
-		os = new FileOutputStream(th.cwd+"/plugins/"+pluginName+".jar");
-		downloadFile(url, os);
-		return true;
-	}
-		
-	public static void downloadFile(String url_str, OutputStream os)
-	throws IllegalStateException, MalformedURLException,
-	ProtocolException, IOException {
-		URL url = new URL(url_str.replace(" ", "%20"));
+		OutputStream os = new FileOutputStream(th.cwd+"/plugins/"+pluginName+".jar");
+		URL url = new URL(requestedUrl.replace(" ", "%20"));
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.connect();
@@ -106,8 +106,10 @@ public class Repeater extends Thread{
             	os.write(tmp_buffer, 0, n);
             	os.flush();
             }
+            return true;
         } else {
-        	throw new IllegalStateException("HTTP response: " + responseCode);
+        	console.log(Level.WARNING, "HTTP response: " + responseCode);
+        	return false;
         }
 	}
 	
@@ -132,10 +134,9 @@ public class Repeater extends Thread{
 		paths.delete();
 	}
 	
-	public boolean lookup(Plugin[] plugins) throws IOException{
+	public boolean lookup(Plugin[] plugins) throws IOException, InvalidConfigurationException{
 		String data = "";
 		String response;
-		
 		// we have to clear the list first
 		supported.clear();
 		needUpdate.clear();
@@ -150,9 +151,14 @@ public class Repeater extends Thread{
 		String []result = response.split(":");
 		for(int i = 0; i < result.length; i++) {
 			int x = Integer.parseInt(result[i]);
+			/*
+			 * compare version with database
+			 * 0=needs update; 1=is up2date; 2=unsupported
+			 */
 			if (x == 0) {
 				supported.add(plugins[i]);
-				needUpdate.add(plugins[i]);
+				if (blacklist(plugins[i]))
+					needUpdate.add(plugins[i]);
 			} else if (x == 1) {
 				supported.add(plugins[i]);
 			} else if (x == 2) {
@@ -171,19 +177,35 @@ public class Repeater extends Thread{
 		//	return false;
 		//}
 		// now try to reload
-		try {
-			pm.disablePlugin(plugin);
-			if (!pm.isPluginEnabled(plugin)) {
-				pm.enablePlugin(plugin);
-				if (pm.isPluginEnabled(plugin))
-					return true;
-				else
-					return false;
-			} else
+		pm.disablePlugin(plugin);
+		if (!pm.isPluginEnabled(plugin)) {
+			pm.enablePlugin(plugin);
+			if (pm.isPluginEnabled(plugin))
+				return true;
+			else
 				return false;
-		} catch (NullPointerException e) {
-			console.log(Level.WARNING, "[DEBUG] "+e.getMessage());
+		} else
 			return false;
-		}
+	}
+	
+	public void saveUpdateTime(String plugin) throws FileNotFoundException, IOException, InvalidConfigurationException {
+		Calendar currentDate = Calendar.getInstance();
+		SimpleDateFormat formatter = new SimpleDateFormat("dd.mm.yyyy HH:mm:ss");
+		String dateNow = formatter.format(currentDate.getTime());
+		
+		FileConfiguration config = bu.getConfig();
+		config.load(th.config);
+		config.set("plugins.updated."+plugin, dateNow);
+		config.save(th.config);
+	}
+	
+	public boolean blacklist(Plugin plugin) throws FileNotFoundException, IOException, InvalidConfigurationException {
+		FileConfiguration config = bu.getConfig();
+		
+		config.load(th.config);
+		List plugins = config.getList("plugins.blacklist");
+		if (plugins.contains(plugin))
+			return false;
+		return true;
 	}
 }

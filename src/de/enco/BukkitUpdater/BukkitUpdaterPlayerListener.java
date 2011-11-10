@@ -1,9 +1,8 @@
 package de.enco.BukkitUpdater;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
-
-import de.enco.BukkitUpdater.Async.Overview;
 
 /**
 * BukkitUpdater 0.2.x
@@ -37,8 +36,9 @@ public class BukkitUpdaterPlayerListener extends PlayerListener {
 	
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		if (plugin.perm(player, "usage", false))
-			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin,
-					new Overview(player, plugin.getServer().getPluginManager().getPlugins(), "info"));
+		if (plugin.perm(player, "info", false)) {
+			player.sendMessage(ChatColor.WHITE+"");
+			player.sendMessage(ChatColor.WHITE+"BukkitUpdater version "+plugin.getDescription().getVersion()+" is running");
+		}
 	}
 }

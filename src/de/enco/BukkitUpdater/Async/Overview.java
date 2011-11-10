@@ -1,121 +1,47 @@
 package de.enco.BukkitUpdater.Async;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import de.enco.BukkitUpdater.ThreadHelper;
 
-/**
-* BukkitUpdater 0.2.x
-* Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
-* and many thanks to V10lator for your support.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Permissions Public License as published by
-* the Free Software Foundation, either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Permissions Public License for more details.
-*
-* You should have received a copy of the GNU Permissions Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/**
-* This plugin was written for Craftbukkit
-* @author zauberstuhl
-*/
-
-public class Overview extends Thread{
+public class Overview extends Thread {
 	private final ThreadHelper th = new ThreadHelper();
+	protected static final Logger console = Logger.getLogger("Minecraft");
 	private Player player;
-	private Plugin[] plugins;
-	private String action;
+	private Plugin bu;
 	
-	public String supportedPlugins = "";
-	public String unsupportedPlugins = "";
-		
-	public Overview(Player player, Plugin[] plugins, String action) {
+	public Overview(Player player, Plugin bu) {
 		this.player = player;
-		this.plugins = plugins;
-		this.action = action;
+		this.bu = bu;
 	}
 	
 	public void run() {
-		String[] supported;
-		String[] unsupported;
-
+		FileConfiguration config = bu.getConfig();
 		try {
-			// start a lookup
-			boolean u2d = u2d(player);
-			
-			if (action.equalsIgnoreCase("info")) {
-				if (u2d) th.sendTo(player, "RED", "New Updates available!! /u2d for details");
-			} else if (action.equalsIgnoreCase("unsupported")) {
-				if (unsupportedPlugins.matches(".*;.*")) {
-					unsupported = unsupportedPlugins.split(";");
-					th.sendTo(player, "WHITE", "Following plugins are not supported by BukkitUpdater:");
-					for(int i = 0; unsupported.length > i; i++)
-						th.sendTo(player, "RED", unsupported[i]);
-				} else
-					th.sendTo(player, "GREEN", "All your plugins are supported by BukkitUpdater :)");
-			} else {
-				if (u2d) {
-					supported = supportedPlugins.split(";");
-					th.sendTo(player, "GOLD", "New Updates are available for:");
-					for(int i = 0; supported.length > i; i++)
-						th.sendTo(player, "GREEN", supported[i]);
-				} else
-					th.sendTo(player, "GREEN", "Currently there are no new updates available.");
-				if (unsupportedPlugins.matches(".*;.*")) {
-					unsupported = unsupportedPlugins.split(";");
-					th.sendTo(player, "RED", "There is/are "+unsupported.length+" unsupported plugin(s). For more info: /u2d unsupported");
-				}			
-			}
+			config.load(th.config);
+		} catch (FileNotFoundException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (IOException e) {
-			if (e.toString().matches(".*Connection\\stimed\\sout.*"))
-				th.sendTo(player, "RED", "(The database is currently not available)");
-			else
-				th.sendTo(player, "GRAY", "(Something went wrong)");
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+		} catch (InvalidConfigurationException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		}
-	}
-	
-	public boolean u2d(Player player) throws IOException{
-		String data = "";
-		String response;
-		
-		for(int i = 0; i < plugins.length; i++){
-			String version = plugins[i].getDescription().getVersion();
-			String name = plugins[i].getDescription().getName();
-			data += name+":"+version+"::";
+		List plugins = config.getList("plugins.updated");
+		if (plugins.isEmpty()) {
+			th.sendTo(player, "GREEN", "At the moment no plugins were updated!");
+			return;
 		}
-		response = th.sendData(data);
-
-		String []result = response.split(":");
-		for(int i = 0; i < result.length; i++) {
-			int x = Integer.parseInt(result[i]);
-			if (x == 1) {
-				supportedPlugins += plugins[i]+";";
-			} else if (x == 2) {
-				unsupportedPlugins += plugins[i]+";";
-			}
+		for (int i=0; i < plugins.size(); i++) {
+			th.sendTo(player, "GREEN", config.getName());
 		}
-		// are there updates?
-		if(!response.matches("1"))
-			return true;
-		return false;
-	}
-	
-	public boolean blacklist(String plugin) throws IOException {
-		// read the blacklist and separate
-		String blacklist = th.readFile(th.blacklist);
-		if (blacklist.indexOf(plugin) > 0)
-			return false;
-		return true;
 	}
 }

@@ -1,4 +1,4 @@
-package zauberstuhl.BukkitUpdater;
+package de.enco.BukkitUpdater;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,16 +17,13 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ru.tehkode.permissions.PermissionManager;
-import ru.tehkode.permissions.bukkit.PermissionsEx;
+//import ru.tehkode.permissions.PermissionManager;
+//import ru.tehkode.permissions.bukkit.PermissionsEx;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
+//import com.nijiko.permissions.PermissionHandler;
+//import com.nijikokun.bukkit.Permissions.Permissions;
 
-import zauberstuhl.BukkitUpdater.Async.Blacklist;
-import zauberstuhl.BukkitUpdater.Async.Downloader;
-import zauberstuhl.BukkitUpdater.Async.Overview;
-import zauberstuhl.BukkitUpdater.Async.Reloader;
+import de.enco.BukkitUpdater.Async.*;
 
 /**
 * BukkitUpdater 0.2.x
@@ -56,8 +53,8 @@ public class BukkitUpdater extends JavaPlugin {
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
-	public static PermissionHandler permissionHandler = null;
-	public static PermissionManager permissionExHandler = null;
+	//public static PermissionHandler permissionHandler = null;
+	//public static PermissionManager permissionExHandler = null;
 	
 	@Override
 	public void onDisable() {
@@ -92,6 +89,13 @@ public class BukkitUpdater extends JavaPlugin {
 						new Overview(player,
 								this.getServer().getPluginManager().getPlugins(),
 								"u2d"));
+				/*
+				 * now start the repeater
+				 * he will lookup sequentially the other plugin versions
+				 * sequenze: 10 minutes 
+				 */
+				this.getServer().getScheduler().scheduleAsyncRepeatingTask(this,
+						new Repeater(this), 20L, 1200L);
 				return true;
 			} else {
 				if ((args[0].equalsIgnoreCase("update")) && args.length > 1) {
@@ -124,13 +128,12 @@ public class BukkitUpdater extends JavaPlugin {
 						return true;
 					}
 				}
-				if (args[0].equalsIgnoreCase("ignore")) {
-					if (!perm(player, "ignore", true)
-							|| args[1].equalsIgnoreCase(""))
+				if (args[0].equalsIgnoreCase("ignore") && args.length > 1) {
+					if (!perm(player, "ignore", true))
 						return false;
 					th.sendTo(player, "RED", "Searching ignored plugins...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new Blacklist(player, args[1]));
+							new Blacklist(this, player, args[1]));
 					return true;
 				}
 				if (args[0].equalsIgnoreCase("help")) {
@@ -163,8 +166,8 @@ public class BukkitUpdater extends JavaPlugin {
 			}
 		
 		//setting up permissions
-		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
-		Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
+		//Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
+		//Plugin permissionsEx = this.getServer().getPluginManager().getPlugin("PermissionsEx");
 		Plugin permissionsBukkit = this.getServer().getPluginManager().getPlugin("PermissionsBukkit");
 		
 		// PermissionsBukkit
@@ -172,7 +175,7 @@ public class BukkitUpdater extends JavaPlugin {
 			console.log(Level.INFO, "[BukkitUpdater] Found and will use plugin "+permissionsBukkit.getDescription().getFullName());
 			return;
 		}
-		// Permissions (TheYeti)
+		/*/ Permissions (TheYeti)
 		if (permissions != null) {
 			String permissionsVersion = permissions.getDescription().getVersion().replaceAll("\\.","");
 			// version > 2.5
@@ -187,16 +190,15 @@ public class BukkitUpdater extends JavaPlugin {
 			permissionExHandler = PermissionsEx.getPermissionManager();
 			console.log(Level.INFO, "[BukkitUpdater] Found and will use plugin "+permissionsEx.getDescription().getFullName());
 			return;
-		}
-
-		console.log(Level.INFO, "[BukkitUpdater] Permission system not detected, defaulting to Op");	    
+		}*/
+		console.log(Level.INFO, "[BukkitUpdater] Permission system not detected, defaulting to Op");
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){
+		// If root
 		if (player == null)
-			return true;
-								
-	    // TheYeti permission
+			return true;						
+	    /*/ TheYeti permission
 	    if (permissionHandler != null) {
 	    	if (BukkitUpdater.permissionHandler.has(player, "BukkitUpdater."+perm))
 	    		return true;
@@ -213,7 +215,7 @@ public class BukkitUpdater extends JavaPlugin {
 	    		if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
 	    		return false;
 	    	}
-	    }
+	    }*/
 	    // SuperPermissions
 	    return player.hasPermission("BukkitUpdater."+perm);
 	}

@@ -1,10 +1,13 @@
-package zauberstuhl.BukkitUpdater.Async;
+package de.enco.BukkitUpdater.Async;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
-import zauberstuhl.BukkitUpdater.ThreadHelper;
+import de.enco.BukkitUpdater.ThreadHelper;
 
 /**
 * BukkitUpdater 0.2.x
@@ -31,6 +34,7 @@ import zauberstuhl.BukkitUpdater.ThreadHelper;
 */
 
 public class Reloader extends Thread {
+	protected static final Logger console = Logger.getLogger("Minecraft");
 	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
 	private PluginManager pm;
@@ -44,7 +48,7 @@ public class Reloader extends Thread {
 	
 	public void run() {
 		if (plugin.getDescription().getName().equalsIgnoreCase("BukkitUpdater")) {
-			th.sendTo(player, "RED", "BukkitUpdater cannot restart on his own. Please reload the server ...");
+			console.log(Level.WARNING, "BukkitUpdater cannot restart on his own. Please reload the server ...");
 			return;
 		}
 		

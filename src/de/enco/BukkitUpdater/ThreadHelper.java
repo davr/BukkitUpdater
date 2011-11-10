@@ -1,4 +1,4 @@
-package zauberstuhl.BukkitUpdater;
+package de.enco.BukkitUpdater;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;

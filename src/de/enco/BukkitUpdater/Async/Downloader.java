@@ -1,4 +1,4 @@
-package zauberstuhl.BukkitUpdater.Async;
+package de.enco.BukkitUpdater.Async;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,7 +13,7 @@ import java.net.URL;
 
 import org.bukkit.entity.Player;
 
-import zauberstuhl.BukkitUpdater.ThreadHelper;
+import de.enco.BukkitUpdater.ThreadHelper;
 
 /**
 * BukkitUpdater 0.2.x

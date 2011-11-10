@@ -1,11 +1,11 @@
-package zauberstuhl.BukkitUpdater.Async;
+package de.enco.BukkitUpdater.Async;
 
 import java.io.IOException;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import zauberstuhl.BukkitUpdater.ThreadHelper;
+import de.enco.BukkitUpdater.ThreadHelper;
 
 /**
 * BukkitUpdater 0.2.x

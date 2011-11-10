@@ -1,9 +1,9 @@
-package zauberstuhl.BukkitUpdater;
+package de.enco.BukkitUpdater;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
 
-import zauberstuhl.BukkitUpdater.Async.Overview;
+import de.enco.BukkitUpdater.Async.Overview;
 
 /**
 * BukkitUpdater 0.2.x

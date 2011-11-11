@@ -28,13 +28,37 @@ import com.esotericsoftware.wildcard.Paths;
 
 import de.enco.BukkitUpdater.ThreadHelper;
 
+/**
+* BukkitUpdater 2.0.x
+* Copyright (C) 2011 Lukas Matt 'zauberstuhl y33' <lukas@zauberstuhl.de>
+* and many thanks to V10lator for your support.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Permissions Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Permissions Public License for more details.
+*
+* You should have received a copy of the GNU Permissions Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+* This plugin was written for Craftbukkit
+* @author zauberstuhl
+*/
+
 public class Repeater extends Thread{
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	private final ThreadHelper th = new ThreadHelper();
 	private Plugin bu;
-	private ArrayList<Plugin> supported = new ArrayList<Plugin>();
+	private ArrayList<String> supported = new ArrayList<String>();
 	private ArrayList<Plugin> needUpdate = new ArrayList<Plugin>();
-	private ArrayList<Plugin> unsupported = new ArrayList<Plugin>();
+	private ArrayList<String> unsupported = new ArrayList<String>();
 	
 	public Repeater(Plugin bu) {
 		this.bu = bu;
@@ -51,11 +75,11 @@ public class Repeater extends Thread{
 				//console.log(Level.WARNING, "[DEBUG] supported: "+supported.toString());
 				//console.log(Level.WARNING, "[DEBUG] needUpdate: "+needUpdate.toString());
 				//console.log(Level.WARNING, "[DEBUG] unsupported: "+unsupported.toString());
+				saveUpdateTime();
 				for (int i=0; i < needUpdate.size(); i++) {
 					String plugin = needUpdate.get(i).getDescription().getName();
 					//console.log(Level.WARNING, "[DEBUG] update: "+plugin);
 					if (update(plugin)) {
-						saveUpdateTime(plugin);
 						bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully updated.");
 						if (reload(bu, pm, pm.getPlugin(plugin)))
 							bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully reloaded.");
@@ -65,6 +89,11 @@ public class Repeater extends Thread{
 						console.log(Level.WARNING, "The plugin "+plugin+" update failed!");
 					}
 				}
+				// Save unsupported plugins in the exchange file
+				FileConfiguration config = bu.getConfig();
+				config.load(th.exchange);
+				config.set("plugins.unsupported", unsupported);
+				config.save(th.exchange);
 			}
 		} catch (IllegalStateException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
@@ -156,13 +185,13 @@ public class Repeater extends Thread{
 			 * 0=needs update; 1=is up2date; 2=unsupported
 			 */
 			if (x == 0) {
-				supported.add(plugins[i]);
+				supported.add(plugins[i].toString());
 				if (blacklist(plugins[i]))
 					needUpdate.add(plugins[i]);
 			} else if (x == 1) {
-				supported.add(plugins[i]);
+				supported.add(plugins[i].toString());
 			} else if (x == 2) {
-				unsupported.add(plugins[i]);
+				unsupported.add(plugins[i].toString());
 			}
 		}
 		// are there updates?
@@ -188,15 +217,19 @@ public class Repeater extends Thread{
 			return false;
 	}
 	
-	public void saveUpdateTime(String plugin) throws FileNotFoundException, IOException, InvalidConfigurationException {
+	public void saveUpdateTime() throws FileNotFoundException, IOException, InvalidConfigurationException {
 		Calendar currentDate = Calendar.getInstance();
-		SimpleDateFormat formatter = new SimpleDateFormat("dd.mm.yyyy HH:mm:ss");
+		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/mm/yyyy");
 		String dateNow = formatter.format(currentDate.getTime());
 		
+		ArrayList<String> lastUpdate = new ArrayList<String>(supported.size());
+		for (int i=0; i < supported.size(); i++) {
+			lastUpdate.add(i, supported.get(i)+" last update "+dateNow);
+		}
 		FileConfiguration config = bu.getConfig();
-		config.load(th.config);
-		config.set("plugins.updated."+plugin, dateNow);
-		config.save(th.config);
+		config.load(th.exchange);
+		config.set("plugins.updated", lastUpdate);
+		config.save(th.exchange);
 	}
 	
 	public boolean blacklist(Plugin plugin) throws FileNotFoundException, IOException, InvalidConfigurationException {

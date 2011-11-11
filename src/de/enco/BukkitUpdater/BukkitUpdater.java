@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -24,8 +25,8 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 import de.enco.BukkitUpdater.Async.*;
 
 /**
-* BukkitUpdater 0.2.x
-* Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
+* BukkitUpdater 2.0.x
+* Copyright (C) 2011 Lukas Matt 'zauberstuhl y33' <lukas@zauberstuhl.de>
 * and many thanks to V10lator for your support.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -63,8 +64,16 @@ public class BukkitUpdater extends JavaPlugin {
 	public void onEnable() {		
 		PluginManager pm = this.getServer().getPluginManager();	
 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
-		setupBukkitUpdater();
 		console.log(Level.INFO, "[BukkitUpdater] version " + this.getDescription().getVersion() + " enabled.");
+		try {
+			setupBukkitUpdater();
+		} catch (IOException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+			onDisable();
+		} catch (InvalidConfigurationException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+			onDisable();
+		}
 	}
 		
 	@Override
@@ -81,12 +90,22 @@ public class BukkitUpdater extends JavaPlugin {
 				if (!perm(player, "info", true))
 					return false;
 				th.sendTo(player, "WHITE", "");
-				th.sendTo(player, "WHITE", "BukkitUpdater version "+this.getDescription().getVersion());
+				th.sendTo(player, "GREEN", "BukkitUpdater version "+this.getDescription().getVersion());
 				th.sendTo(player, "RED", "Searching plugin informations ...");
 				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
 						new Overview(player, this));
 				return true;
 			} else {
+				if (args[0].equalsIgnoreCase("update") && args.length == 1) {
+					if (!perm(player, "update", true))
+						return false;
+					th.sendTo(player, "RED", "Update process triggered manual ...");
+					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+							new Repeater(this));
+					th.sendTo(player, "GREEN", "Finished! BukkitUpdater need some time to update all the things in background.");
+					th.sendTo(player, "GREEN", "The duration depends on the number of your plugins.");
+					return true;
+				}
 				if (args[0].equalsIgnoreCase("reload") && args.length > 1) {
 					if (!perm(player, "reload", true))
 						return false;
@@ -118,21 +137,32 @@ public class BukkitUpdater extends JavaPlugin {
 		return false;
 	}
 	
-	public void setupBukkitUpdater(){
+	public void setupBukkitUpdater() throws IOException, InvalidConfigurationException{
 		FileConfiguration config = this.getConfig();
-		config.set("plugins.blacklist", Arrays.asList("PluginName1", "PluginName2"));
+		// create config.yml
+		config.set("plugins.blacklist", Arrays.asList());
+		config.save(th.config);
+		// now create data.yml
+		config.set("plugins.blacklist", null); // remove blacklist form data yml
+		config.set("plugins.unsupported", Arrays.asList());
 		config.set("plugins.updated", Arrays.asList());
-		try {
-			config.save(th.config);
-		} catch (IOException e) {
-			console.log(Level.WARNING, "Was not able to save blacklist.yml: "+e.getMessage());
-		}
 		
-		if (!th.backupFolder.exists())
+		if (!th.backupFolder.exists()) {
 			if (!th.backupFolder.mkdir()) {
 				console.log(Level.INFO, "[BukkitUpdater][WARN] Creating backup directory failed!");
 				onDisable();
 			}
+		}
+		/*
+		 * now start the repeater
+		 * he will lookup sequentially the other plugin versions
+		 * sequenze: 30 minutes 
+		 */
+		Integer scheduler = this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Repeater(this), 60L, 36000L);
+		config.set("scheduler.process.id", scheduler);
+		console.log(Level.INFO, "[BukkitUpdater] Now every 30 minutes BukkitUpdater will update automatically your plugins.");
+		// save configuration
+		config.save(th.exchange);
 		
 		//setting up permissions
 		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
@@ -161,13 +191,6 @@ public class BukkitUpdater extends JavaPlugin {
 			return;
 		}
 		console.log(Level.INFO, "[BukkitUpdater] Permission system not detected, defaulting to Op");
-		/*
-		 * now start the repeater
-		 * he will lookup sequentially the other plugin versions
-		 * sequenze: 10 minutes 
-		 */
-		this.getServer().getScheduler().scheduleAsyncRepeatingTask(this,
-				new Repeater(this), 20L, 12000L);
 	}
 	
 	public boolean perm(Player player, String perm, Boolean notify){

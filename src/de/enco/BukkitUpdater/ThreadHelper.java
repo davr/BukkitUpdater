@@ -16,8 +16,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 /**
-* BukkitUpdater 0.2.x
-* Copyright (C) 2011 Lukas 'zauberstuhl y33' Matt <lukas@zauberstuhl.de>
+* BukkitUpdater 2.0.x
+* Copyright (C) 2011 Lukas Matt 'zauberstuhl y33' <lukas@zauberstuhl.de>
 * and many thanks to V10lator for your support.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ public class ThreadHelper {
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	public String cwd = System.getProperty("user.dir");
 	public File config = new File(cwd+"/plugins/BukkitUpdater/config.yml");
+	public File exchange = new File(cwd+"/plugins/BukkitUpdater/data.yml");
 	public File folder = new File(cwd +"/plugins/BukkitUpdater/");
 	public File backupFolder = new File(cwd +"/plugins/BukkitUpdater/backup/");
 	
@@ -64,7 +65,7 @@ public class ThreadHelper {
 		sendTo(player, "RED", "Bukkit Updater Commands:");
 		sendTo(player, "WHITE", "");
 		sendTo(player, "GOLD", "/u2d - Shows updated plugin(s)");
-		//sendTo(player, "GOLD", "/u2d update <PluginName> - Update the plugin if there is following tag behind the name '(L)'");
+		sendTo(player, "GOLD", "/u2d update - Will trigger manual the update process");
 		sendTo(player, "GOLD", "/u2d reload <PluginName> - Reload the plugin e.g. after a update");
 		sendTo(player, "GOLD", "/u2d ignore list - List all ignored plugins");
 		sendTo(player, "GOLD", "/u2d ignore <PluginName> - Add/Remove a plugin from the blacklist");

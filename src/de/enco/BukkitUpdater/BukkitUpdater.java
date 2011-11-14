@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -50,7 +50,7 @@ import de.enco.BukkitUpdater.Async.*;
 
 public class BukkitUpdater extends JavaPlugin {
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	private final ThreadHelper th = new ThreadHelper();
+	private final ThreadHelper th = new ThreadHelper(this);
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	public static PermissionHandler permissionHandler = null;
 	public static PermissionManager permissionExHandler = null;
@@ -93,7 +93,8 @@ public class BukkitUpdater extends JavaPlugin {
 				th.sendTo(player, "GREEN", "BukkitUpdater version "+this.getDescription().getVersion());
 				th.sendTo(player, "RED", "Searching plugin informations ...");
 				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-						new Overview(player, this));
+						new Overview(player, this)
+				);
 				return true;
 			} else {
 				if (args[0].equalsIgnoreCase("update") && args.length == 1) {
@@ -101,29 +102,19 @@ public class BukkitUpdater extends JavaPlugin {
 						return false;
 					th.sendTo(player, "RED", "Update process triggered manual ...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new Repeater(this));
+							new Repeater(this)
+					);
 					th.sendTo(player, "GREEN", "Finished! BukkitUpdater need some time to update all the things in background.");
 					th.sendTo(player, "GREEN", "The duration depends on the number of your plugins.");
 					return true;
-				}
-				if (args[0].equalsIgnoreCase("reload") && args.length > 1) {
-					if (!perm(player, "reload", true))
-						return false;
-					PluginManager pm = this.getServer().getPluginManager();
-					Plugin reloadPlugin = pm.getPlugin(args[1]);
-					
-					if (reloadPlugin != null) {
-						this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-								new Reloader(player, pm, reloadPlugin));
-						return true;
-					}
 				}
 				if (args[0].equalsIgnoreCase("ignore") && args.length > 1) {
 					if (!perm(player, "ignore", true))
 						return false;
 					th.sendTo(player, "RED", "Searching ignored plugins...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new Blacklist(this, player, args[1]));
+							new Blacklist(this, player, args[1])
+					);
 					return true;
 				}
 				if (args[0].equalsIgnoreCase("help")) {
@@ -137,15 +128,20 @@ public class BukkitUpdater extends JavaPlugin {
 		return false;
 	}
 	
-	public void setupBukkitUpdater() throws IOException, InvalidConfigurationException{
-		FileConfiguration config = this.getConfig();
+	public void setupBukkitUpdater() throws IOException, InvalidConfigurationException {
+		th.getConfig = YamlConfiguration.loadConfiguration(th.config);
+		th.getExchange = YamlConfiguration.loadConfiguration(th.exchange);
 		// create config.yml
-		config.set("plugins.blacklist", Arrays.asList());
-		config.save(th.config);
+		if (!th.config.exists()) {
+			th.getConfig.set("debug", false);
+			th.getConfig.set("plugins.blacklist", Arrays.asList());
+			th.getConfig.save(th.config);
+		}
 		// now create data.yml
-		config.set("plugins.blacklist", null); // remove blacklist form data yml
-		config.set("plugins.unsupported", Arrays.asList());
-		config.set("plugins.updated", Arrays.asList());
+		if (!th.exchange.exists()) {
+			th.getExchange.set("plugins.unsupported", Arrays.asList());
+			th.getExchange.set("plugins.updated", Arrays.asList());
+		}
 		
 		if (!th.backupFolder.exists()) {
 			if (!th.backupFolder.mkdir()) {
@@ -159,10 +155,10 @@ public class BukkitUpdater extends JavaPlugin {
 		 * sequenze: 30 minutes 
 		 */
 		Integer scheduler = this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Repeater(this), 60L, 36000L);
-		config.set("scheduler.process.id", scheduler);
+		th.getExchange.set("scheduler.process.id", scheduler);
 		console.log(Level.INFO, "[BukkitUpdater] Now every 30 minutes BukkitUpdater will update automatically your plugins.");
 		// save configuration
-		config.save(th.exchange);
+		th.getExchange.save(th.exchange);
 		
 		//setting up permissions
 		Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");

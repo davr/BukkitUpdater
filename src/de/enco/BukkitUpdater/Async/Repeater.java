@@ -1,30 +1,22 @@
 package de.enco.BukkitUpdater.Async;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
-import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
-
-import com.esotericsoftware.wildcard.Paths;
 
 import de.enco.BukkitUpdater.ThreadHelper;
 
@@ -53,47 +45,58 @@ import de.enco.BukkitUpdater.ThreadHelper;
 */
 
 public class Repeater extends Thread{
+	private Plugin plugin;
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	private final ThreadHelper th = new ThreadHelper();
-	private Plugin bu;
+	private final ThreadHelper th = new ThreadHelper(plugin);
 	private ArrayList<String> supported = new ArrayList<String>();
 	private ArrayList<Plugin> needUpdate = new ArrayList<Plugin>();
 	private ArrayList<String> unsupported = new ArrayList<String>();
 	
-	public Repeater(Plugin bu) {
-		this.bu = bu;
+	FileConfiguration getExchange = null;
+	
+	public Repeater(Plugin plugin) {
+		this.plugin = plugin;
 	}
 	
 	public void run() {
-		//debug
-		//console.log(Level.WARNING, "[DEBUG] STARTING UPDATE MODE");
-		PluginManager pm = bu.getServer().getPluginManager();
+		PluginManager pm = plugin.getServer().getPluginManager();
 		Plugin[] plugins = pm.getPlugins();
+		// for debugging mode
+		if (th.debug()) console.log(Level.WARNING, "[DEBUG] Start update process ...");
+		getExchange = YamlConfiguration.loadConfiguration(th.exchange);
 		try {
 			if (lookup(plugins)) {
-				//debug
-				//console.log(Level.WARNING, "[DEBUG] supported: "+supported.toString());
-				//console.log(Level.WARNING, "[DEBUG] needUpdate: "+needUpdate.toString());
-				//console.log(Level.WARNING, "[DEBUG] unsupported: "+unsupported.toString());
 				saveUpdateTime();
+				// for debugging mode
+				if (th.debug()) {
+					console.log(Level.WARNING, "[DEBUG] Following plugins are up2date:");
+					console.log(Level.WARNING, "[DEBUG] "+supported.toString());
+					console.log(Level.WARNING, "[DEBUG] Following plugins need updates:");
+					console.log(Level.WARNING, "[DEBUG] "+needUpdate.toString());
+					console.log(Level.WARNING, "[DEBUG] Following were not found in database:");
+					console.log(Level.WARNING, "[DEBUG] "+unsupported.toString());
+				}
 				for (int i=0; i < needUpdate.size(); i++) {
 					String plugin = needUpdate.get(i).getDescription().getName();
 					//console.log(Level.WARNING, "[DEBUG] update: "+plugin);
-					if (update(plugin)) {
-						bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully updated.");
-						if (reload(bu, pm, pm.getPlugin(plugin)))
-							bu.getServer().broadcastMessage(ChatColor.GREEN+"The plugin "+plugin+" was successfully reloaded.");
-						else
-							bu.getServer().broadcastMessage(ChatColor.RED+"Please reload the plugin "+plugin+" manually!");
+					if (th.update(plugin)) {
+						this.plugin.getServer().broadcastMessage(
+								ChatColor.GREEN+"The plugin "+plugin+" was successfully updated."
+						);
 					} else {
 						console.log(Level.WARNING, "The plugin "+plugin+" update failed!");
 					}
 				}
+				// for debugging mode
+				if (th.debug()) console.log(Level.WARNING, "[DEBUG] Reloading server/plugin configurations ...");
+				// reload server plugins
+				th.reloadingServer();
 				// Save unsupported plugins in the exchange file
-				FileConfiguration config = bu.getConfig();
-				config.load(th.exchange);
-				config.set("plugins.unsupported", unsupported);
-				config.save(th.exchange);
+				getExchange.load(th.exchange);
+				getExchange.set("plugins.unsupported", unsupported);
+				getExchange.save(th.exchange);
+				// for debugging mode
+				if (th.debug()) console.log(Level.WARNING, "[DEBUG] Update process finished!");
 			}
 		} catch (IllegalStateException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
@@ -105,68 +108,15 @@ public class Repeater extends Thread{
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (InvalidConfigurationException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+		} catch (ParseException e) {
+			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		}
-	}
-	
-	public boolean update(String pluginName) throws IOException {
-		String requestedUrl = th.sendData(pluginName+":url");
-		//console.log(Level.WARNING, "[DEBUG] link = "+pluginName+":"+url);
-		if (requestedUrl.equalsIgnoreCase("false")
-				|| requestedUrl.equalsIgnoreCase("")) {
-			return false;
-		}
-		/*
-		 * First of all backup
-		 * the old versions
-		 */
-		backup(pluginName);
-		
-		OutputStream os = new FileOutputStream(th.cwd+"/plugins/"+pluginName+".jar");
-		URL url = new URL(requestedUrl.replace(" ", "%20"));
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.connect();
-        int responseCode = conn.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-        	byte tmp_buffer[] = new byte[4096];
-            InputStream is = conn.getInputStream();
-            int n;
-            while ((n = is.read(tmp_buffer)) > 0) {
-            	os.write(tmp_buffer, 0, n);
-            	os.flush();
-            }
-            return true;
-        } else {
-        	console.log(Level.WARNING, "HTTP response: " + responseCode);
-        	return false;
-        }
-	}
-	
-	public void backup(String plugin) throws IOException{
-		Paths paths = new Paths();
-		paths.regex(th.cwd+"/plugins", ".*?"+plugin+".*?\\.jar");
-		
-		for (int i=0; i < paths.getPaths().size(); i++) {
-			InputStream in = new FileInputStream(
-					new File(paths.getPaths().get(i)));
-			OutputStream out = new FileOutputStream(
-					new File(th.cwd+"/plugins/BukkitUpdater/backup/"+plugin+".jar.backup"));
-			byte[] buf = new byte[1024];
-			int len;
-			while ((len = in.read(buf)) > 0){
-				out.write(buf, 0, len);
-			}
-			in.close();
-			out.close();
-		}
-		// delete old versions
-		paths.delete();
 	}
 	
 	public boolean lookup(Plugin[] plugins) throws IOException, InvalidConfigurationException{
 		String data = "";
 		String response;
-		// we have to clear the list first
+		// we have to clear the lists first
 		supported.clear();
 		needUpdate.clear();
 		unsupported.clear();
@@ -186,7 +136,7 @@ public class Repeater extends Thread{
 			 */
 			if (x == 0) {
 				supported.add(plugins[i].toString());
-				if (blacklist(plugins[i]))
+				if (th.blacklist(plugins[i]))
 					needUpdate.add(plugins[i]);
 			} else if (x == 1) {
 				supported.add(plugins[i].toString());
@@ -200,45 +150,17 @@ public class Repeater extends Thread{
 		return false;
 	}
 	
-	public static boolean reload(Plugin bu, PluginManager pm, Plugin plugin) {
-		//if (plugin.getDescription().getName().equalsIgnoreCase("BukkitUpdater")) {
-		//	console.log(Level.WARNING, "BukkitUpdater cannot restart on his own. Please reload the server ...");
-		//	return false;
-		//}
-		// now try to reload
-		pm.disablePlugin(plugin);
-		if (!pm.isPluginEnabled(plugin)) {
-			pm.enablePlugin(plugin);
-			if (pm.isPluginEnabled(plugin))
-				return true;
-			else
-				return false;
-		} else
-			return false;
-	}
-	
 	public void saveUpdateTime() throws FileNotFoundException, IOException, InvalidConfigurationException {
-		Calendar currentDate = Calendar.getInstance();
-		SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd/mm/yyyy");
-		String dateNow = formatter.format(currentDate.getTime());
+		Date date = new Date();
+		Timestamp timestamp = new Timestamp(date.getTime());
+		getExchange = YamlConfiguration.loadConfiguration(th.exchange);
 		
 		ArrayList<String> lastUpdate = new ArrayList<String>(supported.size());
 		for (int i=0; i < supported.size(); i++) {
-			lastUpdate.add(i, supported.get(i)+" last update "+dateNow);
+			lastUpdate.add(i, supported.get(i)+" last update "+timestamp.toString());
 		}
-		FileConfiguration config = bu.getConfig();
-		config.load(th.exchange);
-		config.set("plugins.updated", lastUpdate);
-		config.save(th.exchange);
-	}
-	
-	public boolean blacklist(Plugin plugin) throws FileNotFoundException, IOException, InvalidConfigurationException {
-		FileConfiguration config = bu.getConfig();
-		
-		config.load(th.config);
-		List plugins = config.getList("plugins.blacklist");
-		if (plugins.contains(plugin))
-			return false;
-		return true;
+		getExchange.load(th.exchange);
+		getExchange.set("plugins.updated", lastUpdate);
+		getExchange.save(th.exchange);
 	}
 }

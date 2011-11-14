@@ -1,6 +1,6 @@
 name: BukkitUpdater
 main: de.enco.BukkitUpdater.BukkitUpdater
-version: 2.0.1.1
+version: 2.0.1.2
 author: 3nc0_de
 website: http://www.3nc0.de/
 description: |
@@ -14,7 +14,6 @@ commands:
       /<command> update - Will trigger manual the update process
       /<command> ignore <PluginName> - Add/Remove a plugin from the blacklist
       /<command> ignore list - List all ignored plugins
-      /<command> reload <PluginName> - Reload the plugin e.g. after a update
       /<command> help - Display the help page
 permissions:
   BukkitUpdater.*:
@@ -31,5 +30,3 @@ permissions:
     description: Will trigger manual the update process
   BukkitUpdater.ignore:
     description: Add/Remove a plugin from the blacklist
-  BukkitUpdater.reload:
-    description: Allows you to reload single plugins

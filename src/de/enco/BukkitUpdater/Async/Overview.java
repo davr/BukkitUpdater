@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -38,20 +39,22 @@ import de.enco.BukkitUpdater.ThreadHelper;
 */
 
 public class Overview extends Thread {
-	private final ThreadHelper th = new ThreadHelper();
+	private Plugin plugin;
+	private final ThreadHelper th = new ThreadHelper(plugin);
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	private Player player;
-	private Plugin bu;
 	
-	public Overview(Player player, Plugin bu) {
+	FileConfiguration getExchange = null;
+	
+	public Overview(Player player, Plugin plugin) {
 		this.player = player;
-		this.bu = bu;
+		this.plugin = plugin;
 	}
 	
 	public void run() {
-		FileConfiguration config = bu.getConfig();
+		getExchange = YamlConfiguration.loadConfiguration(th.config);
 		try {
-			config.load(th.exchange);
+			getExchange.load(th.exchange);
 		} catch (FileNotFoundException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (IOException e) {
@@ -59,7 +62,7 @@ public class Overview extends Thread {
 		} catch (InvalidConfigurationException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		}
-		List plugins = config.getList("plugins.updated");
+		List plugins = getExchange.getList("plugins.updated");
 		if (plugins.isEmpty()) {
 			th.sendTo(player, "GREEN", "At the moment no plugins were updated!");
 			return;

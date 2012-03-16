@@ -1,7 +1,7 @@
 name: BukkitUpdater
 main: de.enco.BukkitUpdater.BukkitUpdater
-version: 2.0.1.4
-author: 3nc0_de
+version: 2.0.1.5
+author: 3nc0_de,davr
 website: http://www.3nc0.de/
 description: |
   The plugin updated outdated plugins, if there is a static link on the database.

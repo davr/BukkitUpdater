@@ -18,7 +18,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
-import de.enco.BukkitUpdater.ThreadHelper;
+import de.enco.BukkitUpdater.*;
 
 /**
 * BukkitUpdater 2.0.x
@@ -47,7 +47,7 @@ import de.enco.BukkitUpdater.ThreadHelper;
 public class Repeater extends Thread{
 	private Plugin plugin;
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	private final ThreadHelper th = new ThreadHelper(plugin);
+	private final ThreadHelper th = new ThreadHelper();
 	private ArrayList<String> supported = new ArrayList<String>();
 	private ArrayList<Plugin> needUpdate = new ArrayList<Plugin>();
 	private ArrayList<String> unsupported = new ArrayList<String>();
@@ -79,7 +79,7 @@ public class Repeater extends Thread{
 				for (int i=0; i < needUpdate.size(); i++) {
 					String plugin = needUpdate.get(i).getDescription().getName();
 					//console.log(Level.WARNING, "[DEBUG] update: "+plugin);
-					if (th.update(plugin)) {
+					if (th.update(null, plugin)) {
 						this.plugin.getServer().broadcastMessage(
 								ChatColor.GREEN+"The plugin "+plugin+" was successfully updated."
 						);
@@ -90,7 +90,7 @@ public class Repeater extends Thread{
 				// reload server plugins
 				if (needUpdate.size() > 0) {
 					if (th.debug()) console.log(Level.WARNING, "[DEBUG] Reloading server/plugin configurations ...");
-					th.reloadingServer(plugin);
+					th.reloadServer(plugin);
 				}
 				// Save unsupported plugins in the exchange file
 				getExchange.load(th.exchange);
@@ -109,8 +109,8 @@ public class Repeater extends Thread{
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		} catch (InvalidConfigurationException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
-		} catch (ParseException e) {
-			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+//		} catch (ParseException e) {
+//			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
 		}
 	}
 	

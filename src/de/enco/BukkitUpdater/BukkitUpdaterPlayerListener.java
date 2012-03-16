@@ -1,8 +1,13 @@
 package de.enco.BukkitUpdater;
 
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
+import org.bukkit.event.Listener;
 
 /**
 * BukkitUpdater 2.0.x
@@ -28,13 +33,14 @@ import org.bukkit.event.player.*;
 * @author zauberstuhl
 */
 
-public class BukkitUpdaterPlayerListener extends PlayerListener {
+public class BukkitUpdaterPlayerListener implements Listener {
 	private final BukkitUpdater plugin;
 
 	public BukkitUpdaterPlayerListener(BukkitUpdater instance) {
 		plugin = instance;
 	}
 	
+	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 		if (plugin.perm(player, "info", false)) {

@@ -248,8 +248,7 @@ public class ThreadHelper {
 	 * Warning! High looping risk
 	 */
 	public void reloadServer(Plugin plugin) {
-		plugin.getServer().reload();
-		plugin.getServer().broadcastMessage(ChatColor.GREEN+"The server was successfully reloaded.");
+		plugin.getServer().broadcastMessage(ChatColor.GREEN+"Server needs a reload at some point to update plugins.");
 	}	
 	
 	/*

@@ -44,17 +44,17 @@ import de.enco.BukkitUpdater.ThreadHelper;
 * @author zauberstuhl
 */
 
-public class Repeater extends Thread{
+public class Updater extends Thread{
 	private Plugin plugin;
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	private final ThreadHelper th = new ThreadHelper(plugin);
+	private final ThreadHelper th = new ThreadHelper();
 	private ArrayList<String> supported = new ArrayList<String>();
 	private ArrayList<Plugin> needUpdate = new ArrayList<Plugin>();
 	private ArrayList<String> unsupported = new ArrayList<String>();
 	
 	FileConfiguration getExchange = null;
 	
-	public Repeater(Plugin plugin) {
+	public Updater(Plugin plugin) {
 		this.plugin = plugin;
 	}
 	
@@ -78,8 +78,8 @@ public class Repeater extends Thread{
 				}
 				for (int i=0; i < needUpdate.size(); i++) {
 					String plugin = needUpdate.get(i).getDescription().getName();
-					//console.log(Level.WARNING, "[DEBUG] update: "+plugin);
-					if (th.update(plugin)) {
+					if (th.debug()) console.log(Level.WARNING, "[DEBUG] update: "+plugin);
+					if (th.update(null, plugin)) {
 						this.plugin.getServer().broadcastMessage(
 								ChatColor.GREEN+"The plugin "+plugin+" was successfully updated."
 						);
@@ -90,7 +90,7 @@ public class Repeater extends Thread{
 				// reload server plugins
 				if (needUpdate.size() > 0) {
 					if (th.debug()) console.log(Level.WARNING, "[DEBUG] Reloading server/plugin configurations ...");
-					th.reloadingServer(plugin);
+					th.saveReload(plugin);
 				}
 				// Save unsupported plugins in the exchange file
 				getExchange.load(th.exchange);

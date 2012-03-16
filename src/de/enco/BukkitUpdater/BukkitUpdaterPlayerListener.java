@@ -30,6 +30,7 @@ import org.bukkit.event.player.*;
 
 public class BukkitUpdaterPlayerListener extends PlayerListener {
 	private final BukkitUpdater plugin;
+
 	public BukkitUpdaterPlayerListener(BukkitUpdater instance) {
 		plugin = instance;
 	}
@@ -38,7 +39,7 @@ public class BukkitUpdaterPlayerListener extends PlayerListener {
 		Player player = event.getPlayer();
 		if (plugin.perm(player, "info", false)) {
 			player.sendMessage(ChatColor.WHITE+"");
-			player.sendMessage(ChatColor.WHITE+"BukkitUpdater version "+plugin.getDescription().getVersion()+" is running");
+			player.sendMessage(ChatColor.GREEN+"BukkitUpdater version "+plugin.getDescription().getVersion()+" is running");
 		}
 	}
 }

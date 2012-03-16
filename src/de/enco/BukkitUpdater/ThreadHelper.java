@@ -14,10 +14,16 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -53,9 +59,8 @@ import com.esotericsoftware.wildcard.Paths;
 */
 
 public class ThreadHelper {
-	private Plugin plugin;
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	
+
 	public File root = new File(System.getProperty("user.dir"));
 	public File cwd = new File(root, "/plugins/BukkitUpdater/");
 	public File config = new File(cwd, "config.yml");
@@ -65,10 +70,6 @@ public class ThreadHelper {
 	FileConfiguration getConfig = null;
 	FileConfiguration getExchange = null;
 	
-	public ThreadHelper(Plugin plugin) {
-		this.plugin = plugin;
-	}
-	
 	/*
 	 * Send a request and receive plugin informations
 	 */
@@ -76,11 +77,9 @@ public class ThreadHelper {
 		String received = "";
 		String inputLine;
 		
-		URL adress = new URL( "http://bukkit.3nc0.de/request.pl?s="+send );
+		URL adress = new URL( "http://bukkit.3nc0.de/v2.0.1.4/request.pl?s="+send );
 		BufferedReader in = new BufferedReader(
-				new InputStreamReader(
-						adress.openStream()
-				)
+				new InputStreamReader(adress.openStream())
 		);
 		while ((inputLine = in.readLine()) != null)
 			received += inputLine;
@@ -91,20 +90,41 @@ public class ThreadHelper {
 	/*
 	 * Update the defined plugin
 	 */
-	public boolean update(String pluginName) throws IOException {
-		String requestedUrl = sendData(pluginName+":url");
-		//console.log(Level.WARNING, "[DEBUG] link = "+pluginName+":"+url);
-		if (requestedUrl.equalsIgnoreCase("false")
-				|| requestedUrl.equalsIgnoreCase("")) {
+	public boolean update(Player player, String plugin) throws IOException {
+		String requestedUrl = sendData("url:"+plugin);
+		if (requestedUrl.equalsIgnoreCase("false") || requestedUrl.equalsIgnoreCase(""))
 			return false;
-		}
 		/*
 		 * First of all backup
 		 * the old versions
 		 */
-		backup(pluginName);
+		backup(plugin);
 		
-		OutputStream os = new FileOutputStream(root+"/plugins/"+pluginName+".jar");
+		Pattern p = Pattern.compile("^.+(\\.(\\w{3}))$");
+		Matcher m = p.matcher(requestedUrl);
+		if (!m.matches())
+			return false;
+		
+		String outputFile = root+"/plugins/"+plugin+m.group(1);
+		sendTo(player, ChatColor.GREEN, "Saving file to "+outputFile);
+		wget(requestedUrl, new FileOutputStream(outputFile));
+		if (m.group(2).equalsIgnoreCase("zip")) {
+			getConfig = YamlConfiguration.loadConfiguration(config);
+			if (getConfig.getBoolean("autozip"))
+				unzip(new File(outputFile));
+			else {
+				sendTo(player, ChatColor.RED, "The automatic unzip function is disabled.");
+				sendTo(player, ChatColor.RED, "To enable it set 'autozip: true' in config.yml!");
+			}
+		}
+		return true;
+	}
+	
+	/*
+	 * Wget will download files from url
+	 * to outputstream
+	 */
+	public boolean wget(String requestedUrl, OutputStream os) throws IOException {
 		URL url = new URL(requestedUrl.replace(" ", "%20"));
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -126,6 +146,31 @@ public class ThreadHelper {
 	}
 	
 	/*
+	 * Unzip function unzip a package and look into it
+	 * if the package has in the first layer no
+	 * jar file the unzip process will fail
+	 */
+	public void unzip(File zip) throws ZipException, IOException {
+		int n;
+		byte[] buf = new byte[1024];
+		ZipInputStream zinstream = new ZipInputStream(
+				new FileInputStream(zip)
+		);
+		ZipEntry entry = zinstream.getNextEntry();
+		while (entry != null) {
+			String entryName = entry.getName();
+		    if (debug()) console.log(Level.WARNING, "[DEBUG] extracting ... "+entryName);
+		    FileOutputStream outstream = new FileOutputStream(root+"/plugins/"+entryName);
+		    while ((n = zinstream.read(buf, 0, 1024)) > -1)
+		    	outstream.write(buf, 0, n);
+		    outstream.close();
+		    zinstream.closeEntry();
+		    entry = zinstream.getNextEntry();
+		}
+		zinstream.close();
+	}
+	
+	/*
 	 * Backup the defined plugin
 	 */
 	public void backup(String plugin) throws IOException{
@@ -137,7 +182,7 @@ public class ThreadHelper {
 					new File(paths.getPaths().get(i))
 			);
 			OutputStream out = new FileOutputStream(
-					new File(backupFolder+plugin+".jar.backup")
+					new File(backupFolder+"/"+plugin+".jar.backup")
 			);
 			byte[] buf = new byte[1024];
 			int len;
@@ -155,52 +200,71 @@ public class ThreadHelper {
 	 * Try to reload the server plugins/configuration
 	 * Success depends on the last time the server was reloaded 
 	 */
-	public void reloadingServer() throws FileNotFoundException, IOException, InvalidConfigurationException, ParseException {
+	public void saveReload(Plugin plugin) throws FileNotFoundException, IOException, InvalidConfigurationException, ParseException {
 		Date date = new Date();
 		Timestamp timestamp = new Timestamp(date.getTime());
-				
+		Calendar now = Calendar.getInstance();
+		Calendar lastReload = Calendar.getInstance();
+		/*
+		 * First of all check if config exists
+		 * and if not reload and set last reboot timestamp
+		 */
 		getExchange = YamlConfiguration.loadConfiguration(exchange);
 		if (getExchange.getString("scheduler.reload.last") == null) {
 			getExchange.set(
-					"scheduler.reload.last",  SimpleDateFormat.getInstance().format(
-							timestamp
-					)
+					"scheduler.reload.last",  SimpleDateFormat.getInstance().format(timestamp)
 			);
 			getExchange.save(exchange);
-		}
-		Timestamp lastReload = new Timestamp(
-				SimpleDateFormat.getInstance().parse(
-						getExchange.getString(
-								"scheduler.reload.last"
-						)
-				).getTime()
-		);
+			reloadServer(plugin);
+			return;
+		}	
 		/*
-		 * Wait min. 25 minutes
-		 * unless you reload the server again
+		 * Check the difference between now and the last reboot
+		 * wait min. 25 minutes unless you reload the server again
+		 * and then rewrite the last reboot timestamp
 		 */
-		if ((timestamp.getMinutes() - lastReload.getMinutes()) >= 25) {
-			plugin.getServer().reload();
-			plugin.getServer().broadcastMessage(
-					ChatColor.GREEN+"The updated plugins were successfully reloaded."
+		lastReload.setTime(new Timestamp(
+				SimpleDateFormat.getInstance().parse(
+						getExchange.getString("scheduler.reload.last")
+				).getTime()
+		));
+		int differ = now.get(Calendar.MINUTE) - lastReload.get(Calendar.MINUTE);
+		if (differ >= 25) {
+			getExchange.set(
+					"scheduler.reload.last",  SimpleDateFormat.getInstance().format(timestamp)
 			);
+			getExchange.save(exchange);
+			reloadServer(plugin);
 		} else {
-			if (debug()) console.log(Level.WARNING, "[DEBUG] BukkitUpdater can only reload the server every 25 minutes. Reloading stopped!!");
+			if (debug()) {
+				console.log(Level.WARNING, "[DEBUG] BukkitUpdater can only reload the server every 25 minutes.");
+				console.log(Level.WARNING, "[DEBUG] Last reload "+differ+" minutes ago. Reloading stopped!!");
+			}
 		}
 	}
+	
+	/*
+	 * Reload the server without a timestamp check
+	 * Warning! High looping risk
+	 */
+	public void reloadServer(Plugin plugin) {
+		plugin.getServer().reload();
+		plugin.getServer().broadcastMessage(ChatColor.GREEN+"The server was successfully reloaded.");
+	}	
 	
 	/*
 	 * Display the help page to a specific player
 	 */
 	public void helper(Player player) {
-		sendTo(player, "RED", "Bukkit Updater Commands:");
-		sendTo(player, "WHITE", "");
-		sendTo(player, "GOLD", "/u2d - Shows updated plugin(s)");
-		sendTo(player, "GOLD", "/u2d update - Will trigger manual the update process");
-		sendTo(player, "GOLD", "/u2d ignore list - List all ignored plugins");
-		sendTo(player, "GOLD", "/u2d ignore <PluginName> - Add/Remove a plugin from the blacklist");
-		//sendTo(player, "GOLD", "/u2d unsupported - Shows unsupported plugins");
-		sendTo(player, "GOLD", "/u2d help - Display this help-text");
+		sendTo(player, ChatColor.RED, "Bukkit Updater Commands:");
+		sendTo(player, ChatColor.WHITE, "");
+		sendTo(player, ChatColor.GOLD, "/u2d - Shows updated plugin(s)");
+		sendTo(player, ChatColor.GOLD, "/u2d update - Will trigger manual the update process");
+		sendTo(player, ChatColor.GOLD, "/u2d search [<plugin>|<description>] - You can search after new plugins (Resource: dev.bukkit.org)");
+		sendTo(player, ChatColor.GOLD, "/u2d install <plugin> - Install completely new plugins via a single command");
+		sendTo(player, ChatColor.GOLD, "/u2d ignore list - List all ignored plugins");
+		sendTo(player, ChatColor.GOLD, "/u2d ignore <plugin> - Add/Remove a plugin from the blacklist");
+		sendTo(player, ChatColor.GOLD, "/u2d help - Display this help-text");
 	}
 	
 	/*
@@ -218,12 +282,12 @@ public class ThreadHelper {
 	/*
 	 * Send a message to a specific player
 	 */
-	public void sendTo(Player player, String color, String string) {
+	public void sendTo(Player player, ChatColor color, String string) {
 		if (player == null) {
 			if (!string.equalsIgnoreCase(""))
 				console.log(Level.INFO, string);
 		} else {
-			player.sendMessage(ChatColor.valueOf(color)+string);
+			player.sendMessage(color+string);
 		}
 	}
 	

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -23,6 +24,7 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 import de.enco.BukkitUpdater.Async.*;
+import de.enco.BukkitUpdater.Async.PacketManager.*;
 
 /**
 * BukkitUpdater 2.0.x
@@ -50,7 +52,7 @@ import de.enco.BukkitUpdater.Async.*;
 
 public class BukkitUpdater extends JavaPlugin {
 	protected static final Logger console = Logger.getLogger("Minecraft");
-	private final ThreadHelper th = new ThreadHelper(this);
+	private final ThreadHelper th = new ThreadHelper();
 	private final BukkitUpdaterPlayerListener playerListener = new BukkitUpdaterPlayerListener(this);
 	public static PermissionHandler permissionHandler = null;
 	public static PermissionManager permissionExHandler = null;
@@ -89,31 +91,48 @@ public class BukkitUpdater extends JavaPlugin {
 			if (args.length == 0) {
 				if (!perm(player, "info", true))
 					return false;
-				th.sendTo(player, "WHITE", "");
-				th.sendTo(player, "GREEN", "BukkitUpdater version "+this.getDescription().getVersion());
-				th.sendTo(player, "RED", "Searching plugin informations ...");
+				th.sendTo(player, ChatColor.WHITE, "");
+				th.sendTo(player, ChatColor.GREEN, "BukkitUpdater version "+this.getDescription().getVersion());
+				th.sendTo(player, ChatColor.RED, "Searching plugin informations ...");
 				this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-						new Overview(player, this)
+						new Overview(player)
 				);
 				return true;
 			} else {
 				if (args[0].equalsIgnoreCase("update") && args.length == 1) {
 					if (!perm(player, "update", true))
 						return false;
-					th.sendTo(player, "RED", "Update process triggered manual ...");
+					th.sendTo(player, ChatColor.RED, "Update process triggered manual ...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new Repeater(this)
+							new Updater(this)
 					);
-					th.sendTo(player, "GREEN", "Finished! BukkitUpdater need some time to update all the things in background.");
-					th.sendTo(player, "GREEN", "The duration depends on the number of your plugins.");
+					th.sendTo(player, ChatColor.GREEN, "Finished! BukkitUpdater need some time to update all the things in background.");
+					th.sendTo(player, ChatColor.GREEN, "The duration depends on the number of your plugins.");
+					return true;
+				}
+				if (args[0].equalsIgnoreCase("search") && args.length > 1) {
+					if (!perm(player, "info", true))
+						return false;
+					th.sendTo(player, ChatColor.GREEN, "Searching in database for '"+args[1]+"' ...");
+					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+							new Search(player, args[1])
+					);
+					return true;
+				}
+				if (args[0].equalsIgnoreCase("install") && args.length > 1) {
+					if (!perm(player, "install", true))
+						return false;
+					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
+							new Install(this, args[1], player)
+					);
 					return true;
 				}
 				if (args[0].equalsIgnoreCase("ignore") && args.length > 1) {
 					if (!perm(player, "ignore", true))
 						return false;
-					th.sendTo(player, "RED", "Searching ignored plugins...");
+					th.sendTo(player, ChatColor.RED, "Searching ignored plugins...");
 					this.getServer().getScheduler().scheduleAsyncDelayedTask(this,
-							new Blacklist(this, player, args[1])
+							new Blacklist(player, args[1])
 					);
 					return true;
 				}
@@ -133,6 +152,7 @@ public class BukkitUpdater extends JavaPlugin {
 		th.getExchange = YamlConfiguration.loadConfiguration(th.exchange);
 		// create config.yml
 		if (!th.config.exists()) {
+			th.getConfig.set("autozip", false);
 			th.getConfig.set("debug", false);
 			th.getConfig.set("plugins.blacklist", Arrays.asList());
 			th.getConfig.save(th.config);
@@ -154,7 +174,7 @@ public class BukkitUpdater extends JavaPlugin {
 		 * he will lookup sequentially the other plugin versions
 		 * sequenze: 30 minutes 
 		 */
-		Integer scheduler = this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Repeater(this), 60L, 36000L);
+		Integer scheduler = this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Updater(this), 60L, 36000L);
 		th.getExchange.set("scheduler.process.id", scheduler);
 		console.log(Level.INFO, "[BukkitUpdater] Now every 30 minutes BukkitUpdater will update automatically your plugins.");
 		// save configuration
@@ -198,7 +218,7 @@ public class BukkitUpdater extends JavaPlugin {
 	    	if (BukkitUpdater.permissionHandler.has(player, "BukkitUpdater."+perm))
 	    		return true;
 	    	else {
-	    		if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    		if (notify) th.sendTo(player, ChatColor.GRAY, "(You have not enough permissions)");
 	    		return false;
 	    	}
 	    }
@@ -207,7 +227,7 @@ public class BukkitUpdater extends JavaPlugin {
 	    	if (BukkitUpdater.permissionExHandler.has(player, "BukkitUpdater."+perm))
 		   		return true;
 	    	else {
-	    		if (notify) th.sendTo(player, "GRAY", "(You have not enough permissions)");
+	    		if (notify) th.sendTo(player, ChatColor.GRAY, "(You have not enough permissions)");
 	    		return false;
 	    	}
 	    }

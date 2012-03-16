@@ -4,11 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import de.enco.BukkitUpdater.ThreadHelper;
 
@@ -37,15 +37,13 @@ import de.enco.BukkitUpdater.ThreadHelper;
 */
 
 public class Blacklist extends Thread {
-	private Plugin plugin;
-	private final ThreadHelper th = new ThreadHelper(plugin);
+	private final ThreadHelper th = new ThreadHelper();
 	private Player player;
 	private String input;
 
 	FileConfiguration getConfig = null;
 	
-	public Blacklist(Plugin plugin, Player player, String input) {
-		this.plugin = plugin;
+	public Blacklist(Player player, String input) {
 		this.player = player;
 		this.input = input;
 	}
@@ -55,30 +53,30 @@ public class Blacklist extends Thread {
 		try {
 			getConfig.load(th.config);
 		} catch (FileNotFoundException e) {
-			th.sendTo(player, "GRAY", "(The blacklist was not found)");
+			th.sendTo(player, ChatColor.GRAY, "(The blacklist was not found)");
 		} catch (IOException e) {
-			th.sendTo(player, "GRAY", "(Something went wrong)");
+			th.sendTo(player, ChatColor.GRAY, "(Something went wrong)");
 		} catch (InvalidConfigurationException e) {
-			th.sendTo(player, "GRAY", "(Your blacklist has a wrong configuration)");
+			th.sendTo(player, ChatColor.GRAY, "(Your blacklist has a wrong configuration)");
 		}
 		List plugins = getConfig.getList("plugins.blacklist");
 		if (input.equalsIgnoreCase("list")) {
-			th.sendTo(player, "GRAY", plugins.toString());
+			th.sendTo(player, ChatColor.GRAY, plugins.toString());
 			return;
 		}
 		if (plugins.contains(input)) {
 			plugins.remove(input);
 			getConfig.set("plugins.blacklist", plugins);
-			th.sendTo(player, "GRAY", plugins.toString());
+			th.sendTo(player, ChatColor.GRAY, plugins.toString());
 		} else {
 			plugins.add(input);
 			getConfig.set("plugins.blacklist", plugins);
-			th.sendTo(player, "GRAY", plugins.toString());
+			th.sendTo(player, ChatColor.GRAY, plugins.toString());
 		}
 		try {
 			getConfig.save(th.config);
 		} catch (IOException e) {
-			th.sendTo(player, "GRAY", "(Cannot save blacklist.yml)");
+			th.sendTo(player, ChatColor.GRAY, "(Cannot save blacklist.yml)");
 		}
 	}
 }

@@ -1,6 +1,6 @@
 name: BukkitUpdater
 main: de.enco.BukkitUpdater.BukkitUpdater
-version: 2.0.1.2
+version: 2.0.1.4
 author: 3nc0_de
 website: http://www.3nc0.de/
 description: |
@@ -12,6 +12,8 @@ commands:
     usage: |
       /<command> - Shows updated plugin(s)
       /<command> update - Will trigger manual the update process
+      /<command> search [<plugin>|<description>] - You can search after new plugins (Resource: dev.bukkit.org)
+      /<command> install <plugin> - Install completely new plugins via a single command
       /<command> ignore <PluginName> - Add/Remove a plugin from the blacklist
       /<command> ignore list - List all ignored plugins
       /<command> help - Display the help page
@@ -22,11 +24,14 @@ permissions:
     children:
       BukkitUpdater.info: true
       BukkitUpdater.update: true
+      BukkitUpdater.install: true
       BukkitUpdater.ignore: true
       BukkitUpdater.reload: true
   BukkitUpdater.info:
-    description: Allows you to list informations about updated plugins
+    description: Allows you to list informations about updated/searched plugins
   BukkitUpdater.update:
     description: Will trigger manual the update process
+  BukkitUpdater.install:
+    description: Install completely new plugins via a single command
   BukkitUpdater.ignore:
     description: Add/Remove a plugin from the blacklist

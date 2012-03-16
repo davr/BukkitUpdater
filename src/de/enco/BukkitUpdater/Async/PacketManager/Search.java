@@ -1,15 +1,10 @@
-package de.enco.BukkitUpdater.Async;
+package de.enco.BukkitUpdater.Async.PacketManager;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import de.enco.BukkitUpdater.ThreadHelper;
@@ -38,35 +33,37 @@ import de.enco.BukkitUpdater.ThreadHelper;
 * @author zauberstuhl
 */
 
-public class Overview extends Thread {
-	private final ThreadHelper th = new ThreadHelper();
+public class Search extends Thread {
 	protected static final Logger console = Logger.getLogger("Minecraft");
 	private Player player;
+	private String regex;
+	private final ThreadHelper th = new ThreadHelper();
 	
-	FileConfiguration getExchange = null;
-	
-	public Overview(Player player) {
+	public Search(Player player, String regex) {
 		this.player = player;
+		this.regex = regex;
 	}
 	
 	public void run() {
-		getExchange = YamlConfiguration.loadConfiguration(th.config);
 		try {
-			getExchange.load(th.exchange);
-		} catch (FileNotFoundException e) {
-			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
+			String received = th.sendData("search:"+regex);
+			if (!received.equalsIgnoreCase("false")) {
+				/*
+				 * If there are matches
+				 * send it to the player
+				 */
+				String[] resultList = received.split("::");
+				for (int i=0; i < resultList.length; i++) {
+					String[] pi = resultList[i].split(":");
+					if (pi[2].equalsIgnoreCase("none"))
+						pi[2] = "No description found";
+					th.sendTo(player, ChatColor.GREEN, pi[0]+" "+pi[1]+" - "+pi[2]);
+				}
+			} else {
+				th.sendTo(player, ChatColor.RED, "No matches found.");
+			}
 		} catch (IOException e) {
 			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
-		} catch (InvalidConfigurationException e) {
-			console.log(Level.WARNING, "[BukkitUpdater] Something went wrong: "+e.getMessage());
-		}
-		List plugins = getExchange.getList("plugins.updated");
-		if (plugins.isEmpty()) {
-			th.sendTo(player, ChatColor.GREEN, "At the moment no plugins were updated!");
-			return;
-		}
-		for (int i=0; i < plugins.size(); i++) {
-			th.sendTo(player, ChatColor.GREEN, plugins.get(i).toString());
 		}
 	}
 }
